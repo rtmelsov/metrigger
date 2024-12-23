@@ -122,8 +122,7 @@ func webhook(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
-	var paths []string
-	paths = strings.Split(r.URL.String(), "/")
+	paths := strings.Split(r.URL.String(), "/")
 	if len(paths) == 5 {
 		metType := paths[2]
 		metName := paths[3]
@@ -150,6 +149,5 @@ func webhook(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
 }
