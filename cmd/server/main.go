@@ -123,7 +123,7 @@ func webhook(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	paths := strings.Split(r.URL.String(), "/")
-	if len(paths) == 5 {
+	if len(paths) == 5 && paths[1] == "update" {
 		metType := paths[2]
 		metName := paths[3]
 		metVal := paths[4]
