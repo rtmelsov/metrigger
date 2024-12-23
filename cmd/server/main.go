@@ -142,7 +142,7 @@ func webhook(w http.ResponseWriter, r *http.Request) {
 			}
 
 		default:
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 	} else {
