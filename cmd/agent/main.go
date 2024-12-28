@@ -69,8 +69,9 @@ func RequestToServer(t string, key string, value float64) {
 
 	req.Header.Add("Content-Type", "text/plain")
 
-	_, err = http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Panic(err.Error())
 	}
+	resp.Body.Close()
 }
