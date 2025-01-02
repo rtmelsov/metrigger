@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/rtmelsov/metrigger/internal/handlers"
 	"log"
 	"net/http"
+
+	"github.com/rtmelsov/metrigger/internal/handlers"
 )
 
 func main() {
@@ -15,5 +16,5 @@ func main() {
 }
 func run() error {
 	fmt.Println("Server is running")
-	return http.ListenAndServe(":8080", http.HandlerFunc(handlers.Webhook))
+	return http.ListenAndServe(":8080", handlers.Webhook())
 }
