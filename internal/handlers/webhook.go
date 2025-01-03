@@ -118,7 +118,9 @@ func Webhook() chi.Router {
 						return
 					}
 					w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-					_, err = fmt.Fprint(w, val.Value)
+					if _, err = fmt.Fprint(w, val.Value); err != nil {
+						http.Error(w, err.Error(), http.StatusBadRequest)
+					}
 				})
 			})
 			r.Route("/gauge", func(r chi.Router) {
@@ -138,7 +140,9 @@ func Webhook() chi.Router {
 						return
 					}
 					w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-					_, err = fmt.Fprint(w, val.Value)
+					if _, err = fmt.Fprint(w, val.Value); err != nil {
+						http.Error(w, err.Error(), http.StatusBadRequest)
+					}
 				})
 			})
 		})
