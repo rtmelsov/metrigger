@@ -45,6 +45,7 @@ func TestPostWebhook(t *testing.T) {
 	for _, test := range tests {
 		url := fmt.Sprintf("/update/%v/%v/%v", test.value.t, test.value.name, test.value.number)
 		resp := getReq(t, ts, test.method, url)
+		defer resp.Body.Close()
 
 		require.Equal(t, test.expectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", url, test.expectCode, resp.StatusCode))
 	}
@@ -84,6 +85,7 @@ func TestGetWebhook(t *testing.T) {
 	ts := httptest.NewServer(Webhook())
 	for _, test := range tests {
 		resp := getReq(t, ts, test.method, test.url)
+		defer resp.Body.Close()
 
 		require.Equal(t, test.expectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", test.url, test.expectCode, resp.StatusCode))
 		require.Equal(t, test.contentType, resp.Header.Get("Content-Type"))
