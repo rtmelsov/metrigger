@@ -101,6 +101,9 @@ func Webhook() chi.Router {
 					w.Write([]byte("success"))
 				})
 			})
+			r.Post("/*", func(w http.ResponseWriter, r *http.Request) {
+				http.Error(w, "unknown type", http.StatusBadRequest)
+			})
 		})
 		r.Route("/value", func(r chi.Router) {
 			r.Route("/counter", func(r chi.Router) {
@@ -146,6 +149,9 @@ func Webhook() chi.Router {
 						http.Error(w, err.Error(), http.StatusBadRequest)
 					}
 				})
+			})
+			r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+				http.Error(w, "unknown type", http.StatusBadRequest)
 			})
 		})
 	})
