@@ -83,6 +83,7 @@ func Webhook() chi.Router {
 						http.Error(w, err.Error(), http.StatusBadRequest)
 					}
 					w.WriteHeader(http.StatusOK)
+					w.Write([]byte("success"))
 				})
 			})
 			r.Route("/gauge", func(r chi.Router) {
@@ -97,6 +98,7 @@ func Webhook() chi.Router {
 						http.Error(w, err.Error(), http.StatusBadRequest)
 					}
 					w.WriteHeader(http.StatusOK)
+					w.Write([]byte("success"))
 				})
 			})
 		})
@@ -109,7 +111,7 @@ func Webhook() chi.Router {
 						return
 					}
 					if extra != "" {
-						w.WriteHeader(http.StatusNotFound)
+						http.Error(w, "Can't find parameters", http.StatusNotFound)
 						return
 					}
 					val, err := server.MetricsCounterGet(metName)
@@ -131,7 +133,7 @@ func Webhook() chi.Router {
 						return
 					}
 					if extra != "" {
-						w.WriteHeader(http.StatusNotFound)
+						http.Error(w, "Can't find parameters", http.StatusNotFound)
 						return
 					}
 					val, err := server.MetricsGaugeGet(metName)
