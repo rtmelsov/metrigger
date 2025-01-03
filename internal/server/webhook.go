@@ -32,8 +32,7 @@ func MetricsGaugeGet(name string) (*storage.GaugeMetric, error) {
 }
 
 func MetricsGet() *storage.MemStorage {
-	mem := storage.GetMem()
-	metrics := mem.GetMetrics()
+	metrics := storage.GetMem()
 	return metrics
 }
 

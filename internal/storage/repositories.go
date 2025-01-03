@@ -69,12 +69,6 @@ func (m *MemStorage) GetCounterMetric(name string) (*CounterMetric, error) {
 	return &value, nil
 }
 
-func (m *MemStorage) GetMetrics() *MemStorage {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	return m
-}
-
 func (m *MemStorage) SetCounterMetric(name string, value CounterMetric) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
