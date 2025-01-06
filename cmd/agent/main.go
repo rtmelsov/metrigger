@@ -12,13 +12,13 @@ type metrics map[string]float64
 
 func main() {
 
-	ParseFlag()
+	FlagParse()
 
 	met := make(chan metrics)
 
 	go func(m chan metrics) {
 		for {
-			time.Sleep(time.Duration(PollInterval) * time.Second)
+			time.Sleep(time.Duration(Env.PollInterval) * time.Second)
 			var memStats runtime.MemStats
 			runtime.ReadMemStats(&memStats)
 			var met = metrics{}
@@ -53,7 +53,8 @@ func main() {
 		}
 	}(met)
 	for {
-		time.Sleep(time.Duration(ReportInterval) * time.Second)
+		fmt.Println(Env.ReportInterval, Env.PollInterval)
+		time.Sleep(time.Duration(Env.ReportInterval) * time.Second)
 		for k, b := range <-met {
 			RequestToServer("counter", k, 1)
 			RequestToServer("gauge", k, b)
