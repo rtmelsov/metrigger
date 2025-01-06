@@ -9,12 +9,13 @@ import (
 )
 
 func main() {
+	ParseFlag()
 	err := run()
 	if err != nil {
 		log.Panic(err)
 	}
 }
 func run() error {
-	fmt.Println("Server is running")
-	return http.ListenAndServe(":8080", handlers.Webhook())
+	fmt.Println("Server is running", Addr)
+	return http.ListenAndServe(Addr, handlers.Webhook())
 }
