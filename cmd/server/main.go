@@ -16,6 +16,6 @@ func main() {
 	}
 }
 func run() error {
-	fmt.Println("Server is running", Addr)
-	return http.ListenAndServe(Addr, handlers.Webhook())
+	fmt.Println("Server is running", Data.Addr)
+	return http.ListenAndServe(Data.Addr, handlers.Webhook())
 }
