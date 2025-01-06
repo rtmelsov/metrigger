@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -63,7 +64,7 @@ func main() {
 }
 
 func RequestToServer(t string, key string, value float64) {
-	url := fmt.Sprintf("http://localhost%s/update/%s/%s/%f", Env.Address, t, key, value)
+	url := fmt.Sprintf("http://%s/update/%s/%s/%f", strings.Join(Env.Address, ":"), t, key, value)
 	req, err := http.NewRequest("POST", url, nil)
 
 	if err != nil {
