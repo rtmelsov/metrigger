@@ -1,21 +1,43 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"github.com/caarlos0/env/v6"
 	"log"
 	"net/http"
 	"runtime"
 	"strings"
 	"time"
-
-	"github.com/rtmelsov/metrigger/internal/handlers/helpers"
 )
+
+type Agent struct {
+	ReportInterval int      `env:"REPORT_INTERVAL"`
+	PollInterval   int      `env:"POLL_INTERVAL"`
+	Address        []string `env:"ADDRESS" envSeparator:":"`
+}
 
 type metrics map[string]float64
 
+func AgentFlags() *Agent {
+	var data Agent
+	flag.IntVar(&data.ReportInterval, "r", 10, "report interval")
+	flag.IntVar(&data.PollInterval, "p", 2, "poll interval")
+	data.Address = []string{"localhost", "8080"}
+
+	flag.Parse()
+
+	err := env.Parse(&data)
+	fmt.Println(data)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return &data
+}
+
 func main() {
 
-	data := helpers.AgentFlags()
+	data := AgentFlags()
 
 	met := make(chan metrics)
 
