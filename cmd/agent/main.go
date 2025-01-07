@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -9,6 +10,17 @@ import (
 )
 
 type metrics map[string]float64
+
+var ReportInterval int
+var PollInterval int
+
+func ParseFlag() {
+
+	flag.IntVar(&ReportInterval, "r", 10, "report interval")
+	flag.IntVar(&PollInterval, "p", 2, "poll interval")
+
+	flag.Parse()
+}
 
 func main() {
 

@@ -1,12 +1,21 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"github.com/rtmelsov/metrigger/internal/handlers"
 	"log"
 	"net/http"
-
-	"github.com/rtmelsov/metrigger/internal/handlers"
 )
+
+var Addr string
+
+func ParseFlag() {
+
+	flag.StringVar(&Addr, "a", ":8080", "host and port to run server")
+
+	flag.Parse()
+}
 
 func main() {
 	ParseFlag()
