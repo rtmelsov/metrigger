@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -10,13 +11,28 @@ import (
 
 type metrics map[string]float64
 
+var ReportInterval int
+var PollInterval int
+
+func ParseFlag() {
+
+	flag.IntVar(&ReportInterval, "r", 10, "report interval")
+	flag.IntVar(&PollInterval, "p", 2, "poll interval")
+
+	flag.Parse()
+}
+
 func main() {
+
+	ParseFlag()
 
 	met := make(chan metrics)
 
 	go func(m chan metrics) {
+		fmt.Printf("ReportInterval: %v\r\n", ReportInterval)
+		fmt.Printf("PollInterval: %v\r\n", PollInterval)
 		for {
-			time.Sleep(2 * time.Second)
+			time.Sleep(time.Duration(PollInterval) * time.Second)
 			var memStats runtime.MemStats
 			runtime.ReadMemStats(&memStats)
 			var met = metrics{}
@@ -51,7 +67,7 @@ func main() {
 		}
 	}(met)
 	for {
-		time.Sleep(10 * time.Second)
+		time.Sleep(time.Duration(ReportInterval) * time.Second)
 		for k, b := range <-met {
 			RequestToServer("counter", k, 1)
 			RequestToServer("gauge", k, b)
