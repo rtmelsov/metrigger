@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/caarlos0/env/v6"
 	"log"
 	"net/http"
 	"runtime"
@@ -11,17 +12,24 @@ import (
 
 type metrics map[string]float64
 
-var ReportInterval int
-var PollInterval int
-var Addr string
+var data struct {
+	ReportInterval int    `env:"REPORT_INTERVAL"`
+	PollInterval   int    `env:"POLL_INTERVAL"`
+	Addr           string `env:"ADDRESS"`
+}
 
 func ParseFlag() {
 
-	flag.IntVar(&ReportInterval, "r", 10, "report interval")
-	flag.StringVar(&Addr, "a", "localhost:8080", "host and port to run server")
-	flag.IntVar(&PollInterval, "p", 2, "poll interval")
+	flag.IntVar(&data.ReportInterval, "r", 10, "report interval")
+	flag.StringVar(&data.Addr, "a", "localhost:8080", "host and port to run server")
+	flag.IntVar(&data.PollInterval, "p", 2, "poll interval")
 
 	flag.Parse()
+
+	err := env.Parse(&data)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
@@ -31,11 +39,11 @@ func main() {
 	met := make(chan metrics)
 
 	go func(m chan metrics) {
-		fmt.Printf("Address: %v\r\n", Addr)
-		fmt.Printf("ReportInterval: %v\r\n", ReportInterval)
-		fmt.Printf("PollInterval: %v\r\n", PollInterval)
+		fmt.Printf("Address: %v\r\n", data.Addr)
+		fmt.Printf("ReportInterval: %v\r\n", data.ReportInterval)
+		fmt.Printf("PollInterval: %v\r\n", data.PollInterval)
 		for {
-			time.Sleep(time.Duration(PollInterval) * time.Second)
+			time.Sleep(time.Duration(data.PollInterval) * time.Second)
 			var memStats runtime.MemStats
 			runtime.ReadMemStats(&memStats)
 			var met = metrics{}
@@ -70,7 +78,7 @@ func main() {
 		}
 	}(met)
 	for {
-		time.Sleep(time.Duration(ReportInterval) * time.Second)
+		time.Sleep(time.Duration(data.ReportInterval) * time.Second)
 		for k, b := range <-met {
 			RequestToServer("counter", k, 1)
 			RequestToServer("gauge", k, b)
@@ -79,7 +87,7 @@ func main() {
 }
 
 func RequestToServer(t string, key string, value float64) {
-	url := fmt.Sprintf("http://%s/update/%s/%s/%f", Addr, t, key, value)
+	url := fmt.Sprintf("http://%s/update/%s/%s/%f", data.Addr, t, key, value)
 	req, err := http.NewRequest("POST", url, nil)
 
 	if err != nil {
