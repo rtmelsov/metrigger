@@ -6,16 +6,18 @@ import (
 	"net/http"
 
 	"github.com/rtmelsov/metrigger/internal/handlers"
+	"github.com/rtmelsov/metrigger/internal/handlers/helpers"
+	"github.com/rtmelsov/metrigger/internal/models"
 )
 
 func main() {
-	ParseFlag()
-	err := run()
+	data := helpers.ServerFlags()
+	err := run(*data)
 	if err != nil {
 		log.Panic(err)
 	}
 }
-func run() error {
-	fmt.Println("Server is running", Data.Addr)
-	return http.ListenAndServe(Data.Addr, handlers.Webhook())
+func run(data models.ServerFlags) error {
+	fmt.Println("Server is running", data.Addr)
+	return http.ListenAndServe(data.Addr, handlers.Webhook())
 }

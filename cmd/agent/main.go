@@ -7,19 +7,21 @@ import (
 	"runtime"
 	"strings"
 	"time"
+
+	"github.com/rtmelsov/metrigger/internal/handlers/helpers"
 )
 
 type metrics map[string]float64
 
 func main() {
 
-	FlagParse()
+	data := helpers.AgentFlags()
 
 	met := make(chan metrics)
 
 	go func(m chan metrics) {
 		for {
-			time.Sleep(time.Duration(Env.PollInterval) * time.Second)
+			time.Sleep(time.Duration(data.PollInterval) * time.Second)
 			var memStats runtime.MemStats
 			runtime.ReadMemStats(&memStats)
 			var met = metrics{}
@@ -54,17 +56,17 @@ func main() {
 		}
 	}(met)
 	for {
-		fmt.Println(Env.ReportInterval, Env.PollInterval)
-		time.Sleep(time.Duration(Env.ReportInterval) * time.Second)
+		fmt.Println(data.ReportInterval, data.PollInterval)
+		time.Sleep(time.Duration(data.ReportInterval) * time.Second)
 		for k, b := range <-met {
-			RequestToServer("counter", k, 1)
-			RequestToServer("gauge", k, b)
+			RequestToServer(data.Address, "counter", k, 1)
+			RequestToServer(data.Address, "gauge", k, b)
 		}
 	}
 }
 
-func RequestToServer(t string, key string, value float64) {
-	url := fmt.Sprintf("http://%s/update/%s/%s/%f", strings.Join(Env.Address, ":"), t, key, value)
+func RequestToServer(address []string, t, key string, value float64) {
+	url := fmt.Sprintf("http://%s/update/%s/%s/%f", strings.Join(address, ":"), t, key, value)
 	req, err := http.NewRequest("POST", url, nil)
 
 	if err != nil {
