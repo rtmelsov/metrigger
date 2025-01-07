@@ -1,3 +1,30 @@
 package main
 
-func main() {}
+import (
+	"flag"
+	"fmt"
+	"github.com/rtmelsov/metrigger/internal/handlers"
+	"log"
+	"net/http"
+)
+
+var Addr string
+
+func ParseFlag() {
+
+	flag.StringVar(&Addr, "a", "localhost:8080", "host and port to run server")
+
+	flag.Parse()
+}
+
+func main() {
+	ParseFlag()
+	err := run()
+	if err != nil {
+		log.Panic(err)
+	}
+}
+func run() error {
+	fmt.Printf("Server is running: %v\r\n", Addr)
+	return http.ListenAndServe(Addr, handlers.Webhook())
+}
