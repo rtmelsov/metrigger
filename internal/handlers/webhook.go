@@ -15,6 +15,11 @@ import (
 	"github.com/rtmelsov/metrigger/internal/server"
 )
 
+type ErrorType struct {
+	text       string
+	statusCode int
+}
+
 func GetMetricData(r *http.Request) (string, string) {
 	logger := storage.GetMemStorage().GetLogger()
 	paths := strings.Split(r.URL.String(), "/")
@@ -30,17 +35,26 @@ func GetMetricData(r *http.Request) (string, string) {
 	return metname, metval
 }
 
-func SetMeticsUpdate(w http.ResponseWriter, r *http.Request, fn func(string, string) error) error {
+func SetMeticsUpdate(w http.ResponseWriter, r *http.Request, fn func(string, string) error) *ErrorType {
 	metName, metVal := GetMetricData(r)
 	if metName == "" || metVal == "" {
-		return errors.New("can't find parameters")
+		return &ErrorType{
+			text: "can't find parameters", statusCode: http.StatusNotFound,
+		}
 	}
 	if err := fn(metName, metVal); err != nil {
-		return errors.New("can't find parameters")
+		return &ErrorType{
+			text: "can't find parameters", statusCode: http.http.StatusBadRequest,
+		}
 	}
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte("success"))
-	return err
+	if err != nil {
+		return &ErrorType{
+			text: err.Error(), statusCode: http.StatusBadRequest,
+		}
+	}
+	return nil
 }
 
 func GetMetricsValue(
@@ -48,14 +62,18 @@ func GetMetricsValue(
 	r *http.Request,
 	t string,
 	fn func(name string) (*storage.CounterMetric, *storage.GaugeMetric, error),
-) error {
+) *ErrorType {
 	metName, extra := GetMetricData(r)
 	if extra != "" {
-		return errors.New("can't find parameters")
+		return &ErrorType{
+			text: "can't find parameters", statusCode: http.StatusNotFound,
+		}
 	}
 	counter, gauge, err := fn(metName)
 	if err != nil {
-		return err
+		return &ErrorType{
+			text: "can't find parameters", statusCode: http.StatusBadRequest,
+		}
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	switch t {
@@ -64,10 +82,9 @@ func GetMetricsValue(
 	case "gauge":
 		_, err = fmt.Fprint(w, gauge.Value)
 	default:
-		return errors.New("not found metric method")
-	}
-	if err != nil {
-		return err
+		return &ErrorType{
+			text: "can't find parameters", statusCode: http.StatusBadRequest,
+		}
 	}
 	return nil
 }
@@ -105,7 +122,7 @@ func MetricsUpdateHandler(r chi.Router) {
 			r.Post("/*", func(w http.ResponseWriter, r *http.Request) {
 				if fn, exist := UpdateRequests[k]; exist {
 					if err := SetMeticsUpdate(w, r, fn); err != nil {
-						http.Error(w, "Can't find parameters", http.StatusBadRequest)
+						http.Error(w, err.text, err.statusCode)
 					}
 				} else {
 					http.Error(w, "Can't find parameters", http.StatusBadRequest)
@@ -129,7 +146,7 @@ func MetricsValueHandler(r chi.Router) {
 			r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 				if fn, exist := ValueRequests[k]; exist {
 					if err := GetMetricsValue(w, r, k, fn); err != nil {
-						http.Error(w, "Can't find parameters", http.StatusBadRequest)
+						http.Error(w, err.text, err.statusCode)
 					}
 				} else {
 					http.Error(w, "Can't find parameters", http.StatusBadRequest)
