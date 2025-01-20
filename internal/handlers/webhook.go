@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"errors"
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/middleware"
 	"github.com/rtmelsov/metrigger/internal/storage"
@@ -44,7 +43,7 @@ func SetMeticsUpdate(w http.ResponseWriter, r *http.Request, fn func(string, str
 	}
 	if err := fn(metName, metVal); err != nil {
 		return &ErrorType{
-			text: "can't find parameters", statusCode: http.http.StatusBadRequest,
+			text: "can't find parameters", statusCode: http.StatusBadRequest,
 		}
 	}
 	w.WriteHeader(http.StatusOK)
