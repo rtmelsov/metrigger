@@ -75,17 +75,25 @@ func GetMetricsValue(
 		}
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
+	var localErr ErrorType
 	switch t {
 	case "counter":
 		_, err = fmt.Fprint(w, counter.Value)
+		localErr = ErrorType{
+			text: err.Error(), statusCode: http.StatusBadRequest,
+		}
 	case "gauge":
 		_, err = fmt.Fprint(w, gauge.Value)
+		localErr = ErrorType{
+			text: err.Error(), statusCode: http.StatusBadRequest,
+		}
 	default:
-		return &ErrorType{
+		localErr = ErrorType{
 			text: "can't find parameters", statusCode: http.StatusBadRequest,
 		}
 	}
-	return nil
+	return &localErr
 }
 
 // The following three functions are handlers for working with metrics.
