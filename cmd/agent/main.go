@@ -1,104 +1,11 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"github.com/caarlos0/env/v6"
-	"log"
-	"net/http"
-	"runtime"
-	"time"
+	"github.com/rtmelsov/metrigger/internal/agent"
+	"github.com/rtmelsov/metrigger/internal/config"
 )
 
-type metrics map[string]float64
-
-var data struct {
-	ReportInterval int    `env:"REPORT_INTERVAL"`
-	PollInterval   int    `env:"POLL_INTERVAL"`
-	Addr           string `env:"ADDRESS"`
-}
-
-func ParseFlag() {
-
-	flag.IntVar(&data.ReportInterval, "r", 10, "report interval")
-	flag.StringVar(&data.Addr, "a", "localhost:8080", "host and port to run server")
-	flag.IntVar(&data.PollInterval, "p", 2, "poll interval")
-
-	flag.Parse()
-
-	err := env.Parse(&data)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func main() {
-
-	ParseFlag()
-
-	met := make(chan metrics)
-
-	go func(m chan metrics) {
-		fmt.Printf("Address: %v\r\n", data.Addr)
-		fmt.Printf("ReportInterval: %v\r\n", data.ReportInterval)
-		fmt.Printf("PollInterval: %v\r\n", data.PollInterval)
-		for {
-			time.Sleep(time.Duration(data.PollInterval) * time.Second)
-			var memStats runtime.MemStats
-			runtime.ReadMemStats(&memStats)
-			var met = metrics{}
-			met["Alloc"] = float64(memStats.Alloc)
-			met["BuckHashSys"] = float64(memStats.BuckHashSys)
-			met["Frees"] = float64(memStats.Frees)
-			met["GCCPUFraction"] = float64(memStats.GCCPUFraction)
-			met["GCSys"] = float64(memStats.GCSys)
-			met["HeapAlloc"] = float64(memStats.HeapAlloc)
-			met["HeapIdle"] = float64(memStats.HeapIdle)
-			met["HeapInuse"] = float64(memStats.HeapInuse)
-			met["HeapObjects"] = float64(memStats.HeapObjects)
-			met["HeapReleased"] = float64(memStats.HeapReleased)
-			met["HeapSys"] = float64(memStats.HeapSys)
-			met["LastGC"] = float64(memStats.LastGC)
-			met["Lookups"] = float64(memStats.Lookups)
-			met["MCacheInuse"] = float64(memStats.MCacheInuse)
-			met["MCacheSys"] = float64(memStats.MCacheSys)
-			met["MSpanInuse"] = float64(memStats.MSpanInuse)
-			met["MSpanSys"] = float64(memStats.MSpanSys)
-			met["Mallocs"] = float64(memStats.Mallocs)
-			met["NextGC"] = float64(memStats.NextGC)
-			met["NumForcedGC"] = float64(memStats.NumForcedGC)
-			met["NumGC"] = float64(memStats.NumGC)
-			met["OtherSys"] = float64(memStats.OtherSys)
-			met["PauseTotalNs"] = float64(memStats.PauseTotalNs)
-			met["StackInuse"] = float64(memStats.StackInuse)
-			met["StackSys"] = float64(memStats.StackSys)
-			met["Sys"] = float64(memStats.Sys)
-			met["TotalAlloc"] = float64(memStats.TotalAlloc)
-			m <- met
-		}
-	}(met)
-	for {
-		time.Sleep(time.Duration(data.ReportInterval) * time.Second)
-		for k, b := range <-met {
-			RequestToServer("counter", k, 1)
-			RequestToServer("gauge", k, b)
-		}
-	}
-}
-
-func RequestToServer(t string, key string, value float64) {
-	url := fmt.Sprintf("http://%s/update/%s/%s/%f", data.Addr, t, key, value)
-	req, err := http.NewRequest("POST", url, nil)
-
-	if err != nil {
-		log.Panic(err.Error())
-	}
-
-	req.Header.Add("Content-Type", "text/plain")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Panic(err.Error())
-	}
-	resp.Body.Close()
+	config.AgentParseFlag()
+	agent.Run()
 }

@@ -2,8 +2,12 @@ package storage
 
 import (
 	"errors"
+	"go.uber.org/zap"
 	"sync"
 )
+
+var once sync.Once
+var mem *MemStorage
 
 type CounterMetric struct {
 	Type  string
@@ -18,18 +22,30 @@ type MemStorage struct {
 	Counter map[string]CounterMetric
 	Gauge   map[string]GaugeMetric
 	mu      sync.Mutex
+	logger  *zap.Logger
 }
 
-func newMemStorage() *MemStorage {
-	return &MemStorage{
-		Counter: make(map[string]CounterMetric),
-		Gauge:   make(map[string]GaugeMetric),
-	}
+type MetricsStorage interface {
+	GetGaugeMetric(name string) (*GaugeMetric, error)
+	GetCounterMetric(name string) (*CounterMetric, error)
+	SetGaugeMetric(name string, value GaugeMetric)
+	SetCounterMetric(name string, value CounterMetric)
+	GetLogger() *zap.Logger
 }
 
-var mem = newMemStorage()
+func (m *MemStorage) GetLogger() *zap.Logger {
+	return m.logger
+}
 
-func GetMem() *MemStorage {
+func GetMemStorage() MetricsStorage {
+	once.Do(func() {
+		Log, _ := zap.NewProduction()
+		mem = &MemStorage{
+			Counter: make(map[string]CounterMetric),
+			Gauge:   make(map[string]GaugeMetric),
+			logger:  Log,
+		}
+	})
 	return mem
 }
 

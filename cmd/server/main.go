@@ -1,39 +1,25 @@
 package main
 
 import (
-	"flag"
-	"fmt"
-	"log"
-	"net/http"
-
-	"github.com/caarlos0/env/v6"
+	"github.com/rtmelsov/metrigger/internal/config"
 	"github.com/rtmelsov/metrigger/internal/handlers"
+	"github.com/rtmelsov/metrigger/internal/storage"
+	"go.uber.org/zap"
+	"net/http"
 )
 
-var data struct {
-	Addr string `env:"ADDRESS"`
-}
-
-func ParseFlag() {
-
-	flag.StringVar(&data.Addr, "a", "localhost:8080", "host and port to run server")
-
-	flag.Parse()
-
-	err := env.Parse(&data)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
 func main() {
-	ParseFlag()
+	config.ServerParseFlag()
+
+	logger := storage.GetMemStorage().GetLogger()
+	defer logger.Sync()
+
 	err := run()
 	if err != nil {
-		log.Panic(err)
+		logger := storage.GetMemStorage().GetLogger()
+		logger.Panic("error while running server", zap.String("error", err.Error()))
 	}
 }
 func run() error {
-	fmt.Printf("Server is running: %v\r\n", data.Addr)
-	return http.ListenAndServe(data.Addr, handlers.Webhook())
+	return http.ListenAndServe(config.ServerFlags.Addr, handlers.Webhook())
 }
