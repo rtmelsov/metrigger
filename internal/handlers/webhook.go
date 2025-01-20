@@ -36,7 +36,7 @@ func SetMeticsUpdate(w http.ResponseWriter, r *http.Request, fn func(string, str
 		return errors.New("can't find parameters")
 	}
 	if err := fn(metName, metVal); err != nil {
-		http.Error(w, "Can't find parameters", http.StatusNotFound)
+		return errors.New("can't find parameters")
 	}
 	w.WriteHeader(http.StatusOK)
 	_, err := w.Write([]byte("success"))
@@ -105,10 +105,10 @@ func MetricsUpdateHandler(r chi.Router) {
 			r.Post("/*", func(w http.ResponseWriter, r *http.Request) {
 				if fn, exist := UpdateRequests[k]; exist {
 					if err := SetMeticsUpdate(w, r, fn); err != nil {
-						http.Error(w, "Can't find parameters", http.StatusNotFound)
+						http.Error(w, "Can't find parameters", http.StatusBadRequest)
 					}
 				} else {
-					http.Error(w, "Can't find parameters", http.StatusNotFound)
+					http.Error(w, "Can't find parameters", http.StatusBadRequest)
 				}
 			})
 		})
@@ -129,10 +129,10 @@ func MetricsValueHandler(r chi.Router) {
 			r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 				if fn, exist := ValueRequests[k]; exist {
 					if err := GetMetricsValue(w, r, k, fn); err != nil {
-						http.Error(w, "Can't find parameters", http.StatusNotFound)
+						http.Error(w, "Can't find parameters", http.StatusBadRequest)
 					}
 				} else {
-					http.Error(w, "Can't find parameters", http.StatusNotFound)
+					http.Error(w, "Can't find parameters", http.StatusBadRequest)
 				}
 			})
 		})
