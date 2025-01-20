@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"errors"
 	"go.uber.org/zap"
 	"sync"
 )
@@ -68,7 +69,7 @@ func (m *MemStorage) GetGaugeMetric(name string) (*GaugeMetric, error) {
 	var value GaugeMetric
 	value, ok := m.Gauge[name]
 	if !ok {
-		m.GetLogger().Info("can't get that name's value")
+		return nil, errors.New("can't get that name's value")
 	}
 	return &value, nil
 }
@@ -79,7 +80,7 @@ func (m *MemStorage) GetCounterMetric(name string) (*CounterMetric, error) {
 	var value CounterMetric
 	value, ok := m.Counter[name]
 	if !ok {
-		m.GetLogger().Info("can't get that name's value")
+		return nil, errors.New("can't get that name's value")
 	}
 	return &value, nil
 }
