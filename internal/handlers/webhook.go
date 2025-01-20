@@ -71,7 +71,7 @@ func GetMetricsValue(
 	counter, gauge, err := fn(metName)
 	if err != nil {
 		return &ErrorType{
-			text: "can't find parameters", statusCode: http.StatusBadRequest,
+			text: "can't find parameters", statusCode: http.StatusNotFound,
 		}
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
