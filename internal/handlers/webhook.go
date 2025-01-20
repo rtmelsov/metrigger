@@ -80,13 +80,17 @@ func GetMetricsValue(
 	switch t {
 	case "counter":
 		_, err = fmt.Fprint(w, counter.Value)
-		localErr = ErrorType{
-			text: err.Error(), statusCode: http.StatusBadRequest,
+		if err != nil {
+			localErr = ErrorType{
+				text: err.Error(), statusCode: http.StatusBadRequest,
+			}
 		}
 	case "gauge":
 		_, err = fmt.Fprint(w, gauge.Value)
-		localErr = ErrorType{
-			text: err.Error(), statusCode: http.StatusBadRequest,
+		if err != nil {
+			localErr = ErrorType{
+				text: err.Error(), statusCode: http.StatusBadRequest,
+			}
 		}
 	default:
 		localErr = ErrorType{
