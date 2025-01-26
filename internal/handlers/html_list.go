@@ -20,5 +20,6 @@ func MerticsListHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	if err := t.Execute(w, mem); err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
+		return
 	}
 }

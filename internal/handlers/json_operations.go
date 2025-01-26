@@ -59,6 +59,7 @@ func JsonGet(w http.ResponseWriter, r *http.Request) {
 	data, err := json.Marshal(metric)
 	if err != nil {
 		http.Error(w, "Failed to Marshal JSON", http.StatusInternalServerError)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -104,11 +105,13 @@ func JsonUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 	if err != nil {
 		http.Error(w, "Failed to find element", http.StatusInternalServerError)
+		return
 	}
 
 	data, err := json.Marshal(metric)
 	if err != nil {
 		http.Error(w, "Failed to Marshal JSON", http.StatusInternalServerError)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

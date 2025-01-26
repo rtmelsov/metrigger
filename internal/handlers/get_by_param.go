@@ -25,6 +25,7 @@ func MetricsValueHandler(r chi.Router) {
 					counter, gauge, err := GetMetricsValue(metName, extra, fn)
 					if err != nil {
 						http.Error(w, err.Text, err.StatusCode)
+						return
 					}
 					w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
@@ -50,6 +51,7 @@ func MetricsValueHandler(r chi.Router) {
 	}
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unknown type", http.StatusBadRequest)
+		return
 	})
 }
 
