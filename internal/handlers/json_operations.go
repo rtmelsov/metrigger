@@ -55,9 +55,12 @@ func JSONGet(w http.ResponseWriter, r *http.Request) {
 
 	var metric interface{}
 	if resp.MType == "counter" {
-		metric = counter
+		num := int64(counter.Value)
+		resp.Delta = &num
+		metric = resp
 	} else {
-		metric = gauge
+		resp.Value = &gauge.Value
+		metric = resp
 	}
 	data, err := json.Marshal(metric)
 	if err != nil {
@@ -109,13 +112,22 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 	var metric interface{}
 	mem := storage.GetMemStorage()
 	if resp.MType == "counter" {
-		metric, err = mem.GetCounterMetric(resp.ID)
+		obj, err := mem.GetCounterMetric(resp.ID)
+		if err != nil {
+			http.Error(w, "Failed to find element", http.StatusInternalServerError)
+			return
+		}
+		num := int64(obj.Value)
+		resp.Delta = &num
+		metric = resp
 	} else {
-		metric, err = mem.GetGaugeMetric(resp.ID)
-	}
-	if err != nil {
-		http.Error(w, "Failed to find element", http.StatusInternalServerError)
-		return
+		obj, err := mem.GetGaugeMetric(resp.ID)
+		if err != nil {
+			http.Error(w, "Failed to find element", http.StatusInternalServerError)
+			return
+		}
+		resp.Value = &obj.Value
+		metric = resp
 	}
 
 	data, err := json.Marshal(metric)
