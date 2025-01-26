@@ -1,15 +1,155 @@
 package handlers
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/rtmelsov/metrigger/internal/models"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
 
-func TestPostWebhook(t *testing.T) {
+type JsonReqType struct {
+	t     string
+	name  string
+	delta int64
+	value float64
+}
 
+type JsonTest struct {
+	name       string
+	method     string
+	expectBody string
+	expectCode int
+	action     string
+	value      JsonReqType
+}
+
+var updateTests = []JsonTest{
+	{
+		name:       "1",
+		action:     "update",
+		method:     "POST",
+		expectCode: 200,
+		expectBody: `{"Type":"counter","Value":3242}`,
+		value: JsonReqType{
+			t:     "counter",
+			name:  "fdsafd",
+			delta: 3242,
+		},
+	},
+	{
+		name:       "2",
+		action:     "update",
+		method:     "POST",
+		expectCode: 200,
+		expectBody: `{"Type":"counter","Value":6484}`,
+		value: JsonReqType{
+			t:     "counter",
+			name:  "fdsafd",
+			delta: 3242,
+		},
+	},
+	{
+		name:       "3",
+		action:     "update",
+		expectBody: `{"Type":"gauge","Value":32}`,
+		method:     "POST",
+		expectCode: 200,
+		value: JsonReqType{
+			t:     "gauge",
+			name:  "fdsafd",
+			value: 32.42,
+		},
+	},
+	{
+		name:       "4",
+		action:     "value",
+		method:     "POST",
+		expectCode: 200,
+		expectBody: `{"Type":"counter","Value":6484}`,
+		value: JsonReqType{
+			t:    "counter",
+			name: "fdsafd",
+		},
+	},
+	{
+		name:       "5",
+		action:     "value",
+		method:     "POST",
+		expectCode: 200,
+		expectBody: `{"Type":"gauge","Value":32}`,
+		value: JsonReqType{
+			t:    "gauge",
+			name: "fdsafd",
+		},
+	},
+	{
+		name:       "6",
+		action:     "value",
+		method:     "POST",
+		expectCode: 404,
+		expectBody: "",
+		value: JsonReqType{
+			t:    "gauge",
+			name: "unknown",
+		},
+	},
+}
+
+func jsonReqCheck(t *testing.T, ts *httptest.Server, test *JsonTest, b *models.Metrics) {
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(b)
+	assert.NoError(t, err)
+	url := fmt.Sprintf(fmt.Sprintf("/%s/", test.action))
+	resp := getReq(t, ts, test.method, url, &buf)
+
+	defer resp.Body.Close()
+
+	require.Equal(t, test.expectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", url, test.expectCode, resp.StatusCode))
+	// Read the response body
+	bodyBytes, err := io.ReadAll(resp.Body)
+	require.NoError(t, err, "Error reading response body")
+
+	// Convert response body to string
+	responseBody := string(bodyBytes)
+
+	fmt.Println("responseBody", responseBody)
+
+	// Use require.JSONEq to compare JSON strings
+	if resp.StatusCode == http.StatusOK {
+		require.JSONEq(t, test.expectBody, responseBody, "Response body does not match expected JSON")
+	}
+}
+
+func TestJsonUpdateWebhook(t *testing.T) {
+	ts := httptest.NewServer(Webhook())
+	var b models.Metrics
+
+	for _, test := range updateTests {
+
+		if test.value.t == "counter" {
+			b = models.Metrics{
+				MType: test.value.t,
+				ID:    test.value.name,
+				Delta: &test.value.delta,
+			}
+		} else {
+			b = models.Metrics{
+				MType: test.value.t,
+				ID:    test.value.name,
+				Value: &test.value.value,
+			}
+		}
+		jsonReqCheck(t, ts, &test, &b)
+	}
+}
+
+func TestPostWebhook(t *testing.T) {
 	type valueType struct {
 		t      string
 		name   string
@@ -44,7 +184,7 @@ func TestPostWebhook(t *testing.T) {
 	ts := httptest.NewServer(Webhook())
 	for _, test := range tests {
 		url := fmt.Sprintf("/update/%v/%v/%v", test.value.t, test.value.name, test.value.number)
-		resp := getReq(t, ts, test.method, url)
+		resp := getReq(t, ts, test.method, url, nil)
 		defer resp.Body.Close()
 
 		require.Equal(t, test.expectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", url, test.expectCode, resp.StatusCode))
@@ -84,7 +224,7 @@ func TestGetWebhook(t *testing.T) {
 	}
 	ts := httptest.NewServer(Webhook())
 	for _, test := range tests {
-		resp := getReq(t, ts, test.method, test.url)
+		resp := getReq(t, ts, test.method, test.url, nil)
 		defer resp.Body.Close()
 
 		require.Equal(t, test.expectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", test.url, test.expectCode, resp.StatusCode))
@@ -92,16 +232,16 @@ func TestGetWebhook(t *testing.T) {
 	}
 }
 
-func getReq(t *testing.T, r *httptest.Server, method, path string) *http.Response {
+func getReq(t *testing.T, r *httptest.Server, method, path string, body io.Reader) *http.Response {
+	var reqBody io.Reader
+	if body != nil {
+		reqBody = body
+	}
 	url := r.URL + path
-	req, err := http.NewRequest(method, url, nil)
+	req, err := http.NewRequest(method, url, reqBody)
 	require.NoError(t, err)
 
 	resp, err := r.Client().Do(req)
 	require.NoError(t, err)
-
-	defer resp.Body.Close()
-
 	return resp
-
 }

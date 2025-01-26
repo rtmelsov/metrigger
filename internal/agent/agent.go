@@ -1,8 +1,11 @@
 package agent
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/config"
+	"github.com/rtmelsov/metrigger/internal/models"
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
 	"net/http"
@@ -60,15 +63,33 @@ func Run() {
 	for {
 		time.Sleep(time.Duration(config.AgentFlags.ReportInterval) * time.Second)
 		for k, b := range <-met {
-			RequestToServer("counter", k, 1)
-			RequestToServer("gauge", k, b)
+			RequestToServer("counter", k, 0, 1)
+			RequestToServer("gauge", k, b, 0)
 		}
 	}
 }
 
-func RequestToServer(t string, key string, value float64) {
-	url := fmt.Sprintf("http://%s/update/%s/%s/%f", config.AgentFlags.Addr, t, key, value)
-	req, err := http.NewRequest("POST", url, nil)
+func RequestToServer(t string, key string, value float64, counter int64) {
+	var metric models.Metrics
+
+	if t == "counter" {
+		metric = models.Metrics{
+			MType: t,
+			ID:    key,
+			Delta: &counter,
+		}
+	} else {
+		metric = models.Metrics{
+			MType: t,
+			ID:    key,
+			Value: &value,
+		}
+	}
+	data, err := json.Marshal(metric)
+	requestBody := bytes.NewReader(data)
+	url := fmt.Sprintf("http://%s/update/", config.AgentFlags.Addr)
+
+	req, err := http.NewRequest("POST", url, requestBody)
 
 	logger := storage.GetMemStorage().GetLogger()
 	if err != nil {

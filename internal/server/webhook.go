@@ -44,7 +44,7 @@ func MetricsCounterSet(name string, val string) error {
 	oldMet, err := mem.GetCounterMetric(name)
 	if err != nil {
 		logger := storage.GetMemStorage().GetLogger()
-		logger.Error("Error: %v\r\n", zap.String("error", err.Error()))
+		logger.Debug("Error: %v\r\n", zap.String("error", err.Error()))
 	} else {
 		oldCount = oldMet.Value
 	}
