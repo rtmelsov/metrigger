@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/config"
 	"github.com/rtmelsov/metrigger/internal/handlers"
@@ -14,6 +15,10 @@ func main() {
 	config.ServerParseFlag()
 
 	logger := storage.GetMemStorage().GetLogger()
+
+	prettyJSON, _ := json.MarshalIndent(config.ServerFlags, "", "  ")
+	logger.Info("started", zap.String("server flags", string(prettyJSON)))
+
 	defer logger.Sync()
 
 	err := run()

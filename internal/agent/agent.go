@@ -19,7 +19,8 @@ func Run() {
 	met := make(chan metrics)
 
 	logger := storage.GetMemStorage().GetLogger()
-	logger.Info("started")
+	prettyJSON, _ := json.MarshalIndent(config.AgentFlags, "", "  ")
+	logger.Info("started", zap.String("agent flags", string(prettyJSON)))
 
 	go func(m chan metrics) {
 		for {
