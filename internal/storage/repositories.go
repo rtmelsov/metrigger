@@ -3,7 +3,6 @@ package storage
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"go.uber.org/zap"
 	"sync"
 )
@@ -70,8 +69,11 @@ func (m *MemStorage) GetGaugeMetric(name string) (*GaugeMetric, error) {
 	defer m.mu.Unlock()
 	var value GaugeMetric
 	value, ok := m.Gauge[name]
+	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	fmt.Printf("GetGaugeMetric: %v\r\n", string(prettyJSON))
+	logger.Info("URL data:",
+		zap.String("GetGaugeMetric name", name),
+		zap.String("GetGaugeMetric value", string(prettyJSON)))
 	if !ok {
 		return nil, errors.New("can't get that name's value")
 	}
@@ -82,8 +84,11 @@ func (m *MemStorage) GetCounterMetric(name string) (*CounterMetric, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	var value CounterMetric
+	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	fmt.Printf("GetCounterMetric: %v\r\n", string(prettyJSON))
+	logger.Info("URL data:",
+		zap.String("GetCounterMetric name", name),
+		zap.String("GetCounterMetric value", string(prettyJSON)))
 	value, ok := m.Counter[name]
 	if !ok {
 		return nil, errors.New("can't get that name's value")
@@ -95,8 +100,12 @@ func (m *MemStorage) SetCounterMetric(name string, value CounterMetric) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	fmt.Printf("SetCounterMetric: %v\r\n", string(prettyJSON))
+	logger.Info("URL data:",
+		zap.String("SetCounterMetric name", name),
+		zap.String("SetCounterMetric value", string(prettyJSON)))
+
 	m.Counter[name] = value
 }
 
@@ -104,7 +113,11 @@ func (m *MemStorage) SetGaugeMetric(name string, value GaugeMetric) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	fmt.Printf("SetGaugeMetric: %v\r\n", string(prettyJSON))
+	logger.Info("URL data:",
+		zap.String("set gauge metric name", name),
+		zap.String("set gauge metric value", string(prettyJSON)))
+
 	m.Gauge[name] = value
 }
