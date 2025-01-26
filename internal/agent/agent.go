@@ -63,7 +63,7 @@ func Run() {
 			RequestToServer("gauge", k, b, 0)
 		}
 
-		logger.Info("started")
+		logger.Info("requested")
 		time.Sleep(time.Duration(config.AgentFlags.ReportInterval) * time.Second)
 	}
 }
