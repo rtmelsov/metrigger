@@ -12,6 +12,9 @@ import (
 
 func main() {
 	fmt.Println("server is running...")
+	if config.AgentFlags.Addr == "" {
+		return
+	}
 	config.ServerParseFlag()
 
 	logger := storage.GetMemStorage().GetLogger()
