@@ -15,7 +15,7 @@ func MetricsValueHandler(r chi.Router) {
 		"counter": server.MetricsCounterGet,
 		"gauge":   server.MetricsGaugeGet,
 	}
-	r.Post("/", JsonGet)
+	r.Post("/", JSONGet)
 	for k := range ValueRequests {
 		r.Route(fmt.Sprintf("/%s", k), func(r chi.Router) {
 			r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +51,6 @@ func MetricsValueHandler(r chi.Router) {
 	}
 	r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unknown type", http.StatusBadRequest)
-		return
 	})
 }
 

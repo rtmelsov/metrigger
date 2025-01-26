@@ -86,14 +86,19 @@ func RequestToServer(t string, key string, value float64, counter int64) {
 		}
 	}
 	data, err := json.Marshal(metric)
+	logger := storage.GetMemStorage().GetLogger()
+	if err != nil {
+		logger.Panic("Error to Marshal SSON", zap.String("error", err.Error()))
+		return
+	}
 	requestBody := bytes.NewReader(data)
 	url := fmt.Sprintf("http://%s/update/", config.AgentFlags.Addr)
 
 	req, err := http.NewRequest("POST", url, requestBody)
 
-	logger := storage.GetMemStorage().GetLogger()
 	if err != nil {
 		logger.Panic("Request to server", zap.String("error", err.Error()))
+		return
 	}
 
 	req.Header.Add("Content-Type", "text/plain")
@@ -101,6 +106,12 @@ func RequestToServer(t string, key string, value float64, counter int64) {
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		logger.Panic("Request to server", zap.String("error", err.Error()))
+		return
 	}
-	resp.Body.Close()
+	err = resp.Body.Close()
+	if err != nil {
+		logger.Panic("Request to server", zap.String("error", err.Error()))
+		return
+	}
+
 }

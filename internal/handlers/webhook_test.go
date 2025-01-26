@@ -13,30 +13,30 @@ import (
 	"testing"
 )
 
-type JsonReqType struct {
+type JSONReqType struct {
 	t     string
 	name  string
 	delta int64
 	value float64
 }
 
-type JsonTest struct {
+type JSONTest struct {
 	name       string
 	method     string
 	expectBody string
 	expectCode int
 	action     string
-	value      JsonReqType
+	value      JSONReqType
 }
 
-var updateTests = []JsonTest{
+var updateTests = []JSONTest{
 	{
 		name:       "1",
 		action:     "update",
 		method:     "POST",
 		expectCode: 200,
 		expectBody: `{"Type":"counter","Value":3242}`,
-		value: JsonReqType{
+		value: JSONReqType{
 			t:     "counter",
 			name:  "fdsafd",
 			delta: 3242,
@@ -48,7 +48,7 @@ var updateTests = []JsonTest{
 		method:     "POST",
 		expectCode: 200,
 		expectBody: `{"Type":"counter","Value":6484}`,
-		value: JsonReqType{
+		value: JSONReqType{
 			t:     "counter",
 			name:  "fdsafd",
 			delta: 3242,
@@ -60,7 +60,7 @@ var updateTests = []JsonTest{
 		expectBody: `{"Type":"gauge","Value":32}`,
 		method:     "POST",
 		expectCode: 200,
-		value: JsonReqType{
+		value: JSONReqType{
 			t:     "gauge",
 			name:  "fdsafd",
 			value: 32.42,
@@ -72,7 +72,7 @@ var updateTests = []JsonTest{
 		method:     "POST",
 		expectCode: 200,
 		expectBody: `{"Type":"counter","Value":6484}`,
-		value: JsonReqType{
+		value: JSONReqType{
 			t:    "counter",
 			name: "fdsafd",
 		},
@@ -83,7 +83,7 @@ var updateTests = []JsonTest{
 		method:     "POST",
 		expectCode: 200,
 		expectBody: `{"Type":"gauge","Value":32}`,
-		value: JsonReqType{
+		value: JSONReqType{
 			t:    "gauge",
 			name: "fdsafd",
 		},
@@ -94,18 +94,18 @@ var updateTests = []JsonTest{
 		method:     "POST",
 		expectCode: 404,
 		expectBody: "",
-		value: JsonReqType{
+		value: JSONReqType{
 			t:    "gauge",
 			name: "unknown",
 		},
 	},
 }
 
-func jsonReqCheck(t *testing.T, ts *httptest.Server, test *JsonTest, b *models.Metrics) {
+func jsonReqCheck(t *testing.T, ts *httptest.Server, test *JSONTest, b *models.Metrics) {
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(b)
 	assert.NoError(t, err)
-	url := fmt.Sprintf(fmt.Sprintf("/%s/", test.action))
+	url := fmt.Sprintf("/%s/", test.action)
 	resp := getReq(t, ts, test.method, url, &buf)
 
 	defer resp.Body.Close()

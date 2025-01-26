@@ -27,7 +27,7 @@ func jsonParse(r *http.Request) (*models.Metrics, error) {
 	return &resp, nil
 }
 
-func JsonGet(w http.ResponseWriter, r *http.Request) {
+func JSONGet(w http.ResponseWriter, r *http.Request) {
 	resp, err := jsonParse(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -68,11 +68,10 @@ func JsonGet(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func JsonUpdate(w http.ResponseWriter, r *http.Request) {
+func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 	resp, err := jsonParse(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
 	}
 
 	var fn func(string, string) error
@@ -120,5 +119,4 @@ func JsonUpdate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
-	return
 }

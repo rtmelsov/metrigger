@@ -14,7 +14,7 @@ func MetricsUpdateHandler(r chi.Router) {
 		"counter": server.MetricsCounterSet,
 		"gauge":   server.MetricsGaugeSet,
 	}
-	r.Post("/", JsonUpdate)
+	r.Post("/", JSONUpdate)
 	for k := range UpdateRequests {
 		r.Route(fmt.Sprintf("/%s", k), func(r chi.Router) {
 			r.Post("/*", func(w http.ResponseWriter, r *http.Request) {
@@ -40,7 +40,6 @@ func MetricsUpdateHandler(r chi.Router) {
 
 	r.Post("/*", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "unknown type", http.StatusBadRequest)
-		return
 	})
 }
 
