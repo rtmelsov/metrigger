@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -16,15 +15,17 @@ func jsonParse(r *http.Request) (*models.Metrics, error) {
 	if r.Body == nil {
 		return nil, errors.New("body is empty")
 	}
-	var resp models.Metrics
+	var resp *models.Metrics
 	err := json.NewDecoder(r.Body).Decode(&resp)
+
 	if err != nil {
 		return nil, err
 	}
 	if resp.ID == "" {
 		return nil, errors.New("id is empty")
 	}
-	return &resp, nil
+
+	return resp, nil
 }
 
 func JSONGet(w http.ResponseWriter, r *http.Request) {
@@ -83,10 +84,7 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 		val = strconv.Itoa(int(*resp.Delta))
 		fn = server.MetricsCounterSet
 	case "gauge":
-		val = strconv.Itoa(int(*resp.Value))
-		fmt.Println("-------")
-		fmt.Println(resp.Value, val)
-		fmt.Println("-------")
+		val = strconv.FormatFloat(*resp.Value, 'f', -1, 64)
 		fn = server.MetricsGaugeSet
 	default:
 		http.Error(w, "", http.StatusNotFound)
