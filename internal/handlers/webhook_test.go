@@ -57,7 +57,7 @@ var updateTests = []JSONTest{
 	{
 		name:       "3",
 		action:     "update",
-		expectBody: `{"Type":"gauge","Value":32}`,
+		expectBody: `{"Type":"gauge","Value":32.42}`,
 		method:     "POST",
 		expectCode: 200,
 		value: JSONReqType{
@@ -82,7 +82,7 @@ var updateTests = []JSONTest{
 		action:     "value",
 		method:     "POST",
 		expectCode: 200,
-		expectBody: `{"Type":"gauge","Value":32}`,
+		expectBody: `{"Type":"gauge","Value":32.42}`,
 		value: JSONReqType{
 			t:    "gauge",
 			name: "fdsafd",
