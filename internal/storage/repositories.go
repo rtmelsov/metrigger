@@ -69,7 +69,7 @@ func (m *MemStorage) GetGaugeMetric(name string) (*GaugeMetric, error) {
 	defer m.mu.Unlock()
 	var value GaugeMetric
 	value, ok := m.Gauge[name]
-	fmt.Printf("GetGaugeMetric: %v", value)
+	fmt.Printf("GetGaugeMetric: %v\r\n", value)
 	if !ok {
 		return nil, errors.New("can't get that name's value")
 	}
@@ -80,7 +80,7 @@ func (m *MemStorage) GetCounterMetric(name string) (*CounterMetric, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	var value CounterMetric
-	fmt.Printf("GetCounterMetric: %v", value)
+	fmt.Printf("GetCounterMetric: %v\r\n", value)
 	value, ok := m.Counter[name]
 	if !ok {
 		return nil, errors.New("can't get that name's value")
@@ -92,7 +92,7 @@ func (m *MemStorage) SetCounterMetric(name string, value CounterMetric) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	fmt.Printf("SetCounterMetric: %v", value)
+	fmt.Printf("SetCounterMetric: %v\r\n", value)
 	m.Counter[name] = value
 }
 
@@ -100,6 +100,6 @@ func (m *MemStorage) SetGaugeMetric(name string, value GaugeMetric) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	fmt.Printf("SetGaugeMetric: %v", value)
+	fmt.Printf("SetGaugeMetric: %v\r\n", value)
 	m.Gauge[name] = value
 }
