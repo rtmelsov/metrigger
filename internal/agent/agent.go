@@ -100,7 +100,7 @@ func RequestToServer(t string, key string, value float64, counter int64) {
 		return
 	}
 
-	req.Header.Add("Content-Type", "application/json")
+	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
