@@ -22,9 +22,6 @@ func Run() {
 	sugar := logger.Sugar()
 
 	go func(m chan metrics) {
-		sugar.Infow("Address", config.AgentFlags.Addr)
-		sugar.Infow("ReportInterval", config.AgentFlags.ReportInterval)
-		sugar.Infow("PollInterval", config.AgentFlags.PollInterval)
 		for {
 			time.Sleep(time.Duration(config.AgentFlags.PollInterval) * time.Second)
 			var memStats runtime.MemStats
@@ -61,11 +58,12 @@ func Run() {
 		}
 	}(met)
 	for {
-		time.Sleep(time.Duration(config.AgentFlags.ReportInterval) * time.Second)
 		for k, b := range <-met {
 			RequestToServer("counter", k, 0, 1)
 			RequestToServer("gauge", k, b, 0)
 		}
+		sugar.Infow("requested")
+		time.Sleep(time.Duration(config.AgentFlags.ReportInterval) * time.Second)
 	}
 }
 
