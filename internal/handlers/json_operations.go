@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -84,6 +85,9 @@ func JsonUpdate(w http.ResponseWriter, r *http.Request) {
 		fn = server.MetricsCounterSet
 	case "gauge":
 		val = strconv.Itoa(int(*resp.Value))
+		fmt.Println("-------")
+		fmt.Println(resp.Value, val)
+		fmt.Println("-------")
 		fn = server.MetricsGaugeSet
 	default:
 		http.Error(w, "", http.StatusNotFound)
