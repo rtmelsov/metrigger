@@ -46,6 +46,10 @@ func GetMemStorage() MetricsStorage {
 			Gauge:   make(map[string]GaugeMetric),
 			logger:  Log,
 		}
+
+		prettyJSON, _ := json.MarshalIndent(mem, "", "  ")
+		Log.Info("first time:",
+			zap.String("mem - ", string(prettyJSON)))
 	})
 	return mem
 }
@@ -71,7 +75,7 @@ func (m *MemStorage) GetGaugeMetric(name string) (*GaugeMetric, error) {
 	value, ok := m.Gauge[name]
 	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	logger.Info("URL data:",
+	logger.Info("get data:",
 		zap.String("GetGaugeMetric name", name),
 		zap.String("GetGaugeMetric value", string(prettyJSON)))
 	if !ok {
@@ -86,7 +90,7 @@ func (m *MemStorage) GetCounterMetric(name string) (*CounterMetric, error) {
 	var value CounterMetric
 	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	logger.Info("URL data:",
+	logger.Info("get data:",
 		zap.String("GetCounterMetric name", name),
 		zap.String("GetCounterMetric value", string(prettyJSON)))
 	value, ok := m.Counter[name]
@@ -102,7 +106,7 @@ func (m *MemStorage) SetCounterMetric(name string, value CounterMetric) {
 
 	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	logger.Info("URL data:",
+	logger.Info("set data:",
 		zap.String("SetCounterMetric name", name),
 		zap.String("SetCounterMetric value", string(prettyJSON)))
 
@@ -115,7 +119,7 @@ func (m *MemStorage) SetGaugeMetric(name string, value GaugeMetric) {
 
 	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	logger.Info("URL data:",
+	logger.Info("set data:",
 		zap.String("set gauge metric name", name),
 		zap.String("set gauge metric value", string(prettyJSON)))
 
