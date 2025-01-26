@@ -58,13 +58,13 @@ func Run() {
 		}
 	}(met)
 	for {
+		time.Sleep(time.Duration(config.AgentFlags.ReportInterval) * time.Second)
 		for k, b := range <-met {
 			RequestToServer("counter", k, 0, 1)
 			RequestToServer("gauge", k, b, 0)
 		}
 
 		logger.Info("requested")
-		time.Sleep(time.Duration(config.AgentFlags.ReportInterval) * time.Second)
 	}
 }
 
