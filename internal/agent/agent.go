@@ -19,7 +19,7 @@ func Run() {
 	met := make(chan metrics)
 
 	logger := storage.GetMemStorage().GetLogger()
-	sugar := logger.Sugar()
+	logger.Info("started")
 
 	go func(m chan metrics) {
 		for {
@@ -62,7 +62,8 @@ func Run() {
 			RequestToServer("counter", k, 0, 1)
 			RequestToServer("gauge", k, b, 0)
 		}
-		sugar.Infow("requested")
+
+		logger.Info("started")
 		time.Sleep(time.Duration(config.AgentFlags.ReportInterval) * time.Second)
 	}
 }
