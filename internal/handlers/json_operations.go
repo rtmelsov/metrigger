@@ -80,9 +80,17 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 
 	switch resp.MType {
 	case "counter":
+		if resp.Delta == nil {
+			http.Error(w, "", http.StatusNotFound)
+			return
+		}
 		val = strconv.Itoa(int(*resp.Delta))
 		fn = server.MetricsCounterSet
 	case "gauge":
+		if resp.Value == nil {
+			http.Error(w, "", http.StatusNotFound)
+			return
+		}
 		val = strconv.FormatFloat(*resp.Value, 'f', -1, 64)
 		fn = server.MetricsGaugeSet
 	default:
