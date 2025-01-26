@@ -35,7 +35,7 @@ var updateTests = []JSONTest{
 		action:     "update",
 		method:     "POST",
 		expectCode: 200,
-		expectBody: `{"Type":"counter","Value":3242}`,
+		expectBody: `{"delta":3242, "id":"fdsafd", "type":"counter"}`,
 		value: JSONReqType{
 			t:     "counter",
 			name:  "fdsafd",
@@ -47,7 +47,7 @@ var updateTests = []JSONTest{
 		action:     "update",
 		method:     "POST",
 		expectCode: 200,
-		expectBody: `{"Type":"counter","Value":6484}`,
+		expectBody: `{"delta":6484, "id":"fdsafd", "type":"counter"}`,
 		value: JSONReqType{
 			t:     "counter",
 			name:  "fdsafd",
@@ -57,7 +57,7 @@ var updateTests = []JSONTest{
 	{
 		name:       "3",
 		action:     "update",
-		expectBody: `{"Type":"gauge","Value":32.42}`,
+		expectBody: `{"id":"fdsafd", "type":"gauge", "value":32.42}`,
 		method:     "POST",
 		expectCode: 200,
 		value: JSONReqType{
@@ -71,7 +71,7 @@ var updateTests = []JSONTest{
 		action:     "value",
 		method:     "POST",
 		expectCode: 200,
-		expectBody: `{"Type":"counter","Value":6484}`,
+		expectBody: `{"delta":6484, "id":"fdsafd", "type":"counter"}`,
 		value: JSONReqType{
 			t:    "counter",
 			name: "fdsafd",
@@ -82,7 +82,7 @@ var updateTests = []JSONTest{
 		action:     "value",
 		method:     "POST",
 		expectCode: 200,
-		expectBody: `{"Type":"gauge","Value":32.42}`,
+		expectBody: `{"id":"fdsafd", "type":"gauge", "value":32.42}`,
 		value: JSONReqType{
 			t:    "gauge",
 			name: "fdsafd",
