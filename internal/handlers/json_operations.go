@@ -16,7 +16,8 @@ func jsonParse(r *http.Request) (*models.Metrics, error) {
 		return nil, errors.New("body is empty")
 	}
 	var resp *models.Metrics
-	err := json.NewDecoder(r.Body).Decode(&resp)
+	decode := json.NewDecoder(r.Body)
+	err := decode.Decode(&resp)
 
 	if err != nil {
 		return nil, err
@@ -72,6 +73,7 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 	resp, err := jsonParse(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 	var fn func(string, string) error
