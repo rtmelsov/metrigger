@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/rtmelsov/metrigger/internal/config"
 	"github.com/rtmelsov/metrigger/internal/handlers"
 	"github.com/rtmelsov/metrigger/internal/storage"
@@ -9,6 +10,7 @@ import (
 )
 
 func main() {
+	fmt.Println("server is running...")
 	config.ServerParseFlag()
 
 	logger := storage.GetMemStorage().GetLogger()
