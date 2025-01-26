@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/rtmelsov/metrigger/internal/config"
 	"github.com/rtmelsov/metrigger/internal/handlers"
 	"github.com/rtmelsov/metrigger/internal/storage"
@@ -11,10 +10,6 @@ import (
 )
 
 func main() {
-	fmt.Println("server is running...")
-	if config.AgentFlags.Addr != "" {
-		return
-	}
 	config.ServerParseFlag()
 
 	logger := storage.GetMemStorage().GetLogger()
