@@ -12,7 +12,7 @@ import (
 
 func main() {
 	fmt.Println("server is running...")
-	if config.AgentFlags.Addr == "" {
+	if config.AgentFlags.Addr != "" {
 		return
 	}
 	config.ServerParseFlag()
