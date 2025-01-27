@@ -8,6 +8,7 @@ import (
 	"github.com/rtmelsov/metrigger/internal/models"
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
+	"math/rand"
 	"net/http"
 	"runtime"
 	"time"
@@ -17,7 +18,7 @@ type metrics map[string]float64
 
 func Run() {
 	met := make(chan metrics)
-
+	var PollCount float64
 	logger := storage.GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(config.AgentFlags, "", "  ")
 	logger.Info("started", zap.String("agent flags", string(prettyJSON)))
@@ -28,6 +29,13 @@ func Run() {
 			var memStats runtime.MemStats
 			runtime.ReadMemStats(&memStats)
 			var met = metrics{}
+			rand.Seed(time.Now().UnixNano())
+
+			// Генерация случайного целого числа
+			RandomValue := rand.Float64() // Случайное число от 0 до 99
+			PollCount++
+			met["PollCount"] = PollCount
+			met["RandomValue"] = RandomValue
 			met["Alloc"] = float64(memStats.Alloc)
 			met["BuckHashSys"] = float64(memStats.BuckHashSys)
 			met["Frees"] = float64(memStats.Frees)
