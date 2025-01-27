@@ -29,10 +29,11 @@ func Run() {
 			var memStats runtime.MemStats
 			runtime.ReadMemStats(&memStats)
 			var met = metrics{}
-			rand.Seed(time.Now().UnixNano())
+			src := rand.NewSource(time.Now().UnixNano())
+			r := rand.New(src)
 
 			// Генерация случайного целого числа
-			RandomValue := rand.Float64() // Случайное число от 0 до 99
+			RandomValue := r.Float64() // Случайное число от 0 до 99
 			PollCount++
 			met["PollCount"] = PollCount
 			met["RandomValue"] = RandomValue
