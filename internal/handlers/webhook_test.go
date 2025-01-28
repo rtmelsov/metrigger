@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/rtmelsov/metrigger/internal/config"
 	"github.com/rtmelsov/metrigger/internal/helpers"
 	"github.com/rtmelsov/metrigger/internal/models"
 	"github.com/stretchr/testify/assert"
@@ -11,8 +12,18 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	// Parse flags for testing
+	config.ServerParseFlag()
+
+	// Run tests
+	code := m.Run()
+	os.Exit(code)
+}
 
 type JSONReqType struct {
 	t     string
