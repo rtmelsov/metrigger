@@ -43,7 +43,7 @@ func DecompressData(data []byte) (*bytes.Buffer, error) {
 	return &result, nil
 }
 
-func JsonParse(r *http.Request) (*models.Metrics, error) {
+func JSONParse(r *http.Request) (*models.Metrics, error) {
 	if r.Body == nil {
 		return nil, errors.New("body is empty")
 	}

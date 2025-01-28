@@ -12,7 +12,7 @@ import (
 )
 
 func JSONGet(w http.ResponseWriter, r *http.Request) {
-	resp, err := helpers.JsonParse(r)
+	resp, err := helpers.JSONParse(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -55,7 +55,7 @@ func JSONGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func JSONUpdate(w http.ResponseWriter, r *http.Request) {
-	resp, err := helpers.JsonParse(r)
+	resp, err := helpers.JSONParse(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
