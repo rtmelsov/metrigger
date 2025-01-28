@@ -26,8 +26,6 @@ tr:nth-child(even) {
 			<body>
 				<div>
 					<h3>Counter</h3>
-
-
 						<table>
 					{{range $category, $product := .Counter}}
 						  <tr>

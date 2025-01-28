@@ -59,22 +59,6 @@ func newCompressReader(r io.ReadCloser) (*compressReader, error) {
 	}, nil
 }
 
-//func (c compressReader) Read(p []byte) (n int, err error) {
-//	var buf bytes.Buffer
-//
-//	read, err := gzip.NewReader(bytes.NewReader(p))
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	_, err = io.Copy(&buf, read)
-//	if err != nil {
-//		log.Fatal(err)
-//	}
-//	fmt.Println(buf)
-//
-//	return c.zr.Read(p)
-//}
-
 func (c compressReader) Read(p []byte) (n int, err error) {
 	return c.zr.Read(p)
 }

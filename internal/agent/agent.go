@@ -95,9 +95,13 @@ func RequestToServer(t string, key string, value float64, counter int64) {
 		}
 	}
 	data, err := json.Marshal(metric)
-	reqBody, err := helpers.CompressData(data)
-
 	logger := storage.GetMemStorage().GetLogger()
+	if err != nil {
+		logger.Panic("Error to Marshal SSON", zap.String("error", err.Error()))
+		return
+	}
+
+	reqBody, err := helpers.CompressData(data)
 	if err != nil {
 		logger.Panic("Error to Marshal SSON", zap.String("error", err.Error()))
 		return
