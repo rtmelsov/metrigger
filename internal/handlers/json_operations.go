@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/rtmelsov/metrigger/internal/helpers"
 	"net/http"
 	"strconv"
 
@@ -11,31 +11,13 @@ import (
 	"github.com/rtmelsov/metrigger/internal/storage"
 )
 
-func jsonParse(r *http.Request) (*models.Metrics, error) {
-	if r.Body == nil {
-		return nil, errors.New("body is empty")
-	}
-	var resp *models.Metrics
-	decode := json.NewDecoder(r.Body)
-	err := decode.Decode(&resp)
-
-	if err != nil {
-		return nil, err
-	}
-	if resp.ID == "" {
-		return nil, errors.New("id is empty")
-	}
-
-	return resp, nil
-}
-
 func JSONGet(w http.ResponseWriter, r *http.Request) {
-	resp, err := jsonParse(r)
+	resp, err := helpers.JsonParse(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	var fn func(name string) (*storage.CounterMetric, *storage.GaugeMetric, error)
+	var fn func(name string) (*models.CounterMetric, *models.GaugeMetric, error)
 	switch resp.MType {
 	case "counter":
 		fn = services.MetricsCounterGet
@@ -73,7 +55,7 @@ func JSONGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func JSONUpdate(w http.ResponseWriter, r *http.Request) {
-	resp, err := jsonParse(r)
+	resp, err := helpers.JsonParse(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

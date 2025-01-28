@@ -17,6 +17,8 @@ type AgentFlagsType struct {
 var (
 	onceForAgent sync.Once
 	AgentFlags   AgentFlagsType
+	once         sync.Once
+	agentMem     *AgentStorage
 )
 
 func AgentParseFlag() {
@@ -33,4 +35,27 @@ func AgentParseFlag() {
 			logger.Fatal("", zap.String("error", err.Error()))
 		}
 	})
+}
+
+type AgentStorage struct {
+	Logger *zap.Logger
+}
+
+type AgentActions interface {
+	GetLogger() *zap.Logger
+}
+
+func (m *AgentStorage) GetLogger() *zap.Logger {
+	return m.Logger
+}
+
+func GetAgentStorage() *AgentStorage {
+	once.Do(func() {
+		Log, _ := zap.NewProduction()
+
+		agentMem = &AgentStorage{
+			Logger: Log,
+		}
+	})
+	return agentMem
 }

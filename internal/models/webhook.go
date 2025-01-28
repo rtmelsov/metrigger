@@ -1,5 +1,7 @@
 package models
 
+import "os"
+
 type Metrics struct {
 	ID    string   `json:"id"`              // имя метрики
 	MType string   `json:"type"`            // параметр, принимающий значение gauge или counter
@@ -10,4 +12,26 @@ type Metrics struct {
 type ErrorType struct {
 	Text       string
 	StatusCode int
+}
+
+type ServerFlagsType struct {
+	Addr            string `env:"ADDRESS"`
+	StoreInterval   int    `env:"STORE_INTERVAL"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH"`
+	Restore         bool   `env:"RESTORE"`
+}
+
+type CounterMetric struct {
+	Type  string
+	Value int
+}
+type GaugeMetric struct {
+	Type  string
+	Value float64
+}
+
+type LocalStorage struct {
+	Counter map[string]CounterMetric
+	Gauge   map[string]GaugeMetric
+	File    *os.File
 }

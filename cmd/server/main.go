@@ -14,17 +14,16 @@ func main() {
 
 	logger := storage.GetMemStorage().GetLogger()
 
-	prettyJSON, _ := json.MarshalIndent(config.ServerFlags, "", "  ")
+	prettyJSON, _ := json.MarshalIndent(storage.ServerFlags, "", "  ")
 	logger.Info("started", zap.String("services flags", string(prettyJSON)))
 
 	defer logger.Sync()
 
 	err := run()
 	if err != nil {
-		logger := storage.GetMemStorage().GetLogger()
 		logger.Panic("error while running services", zap.String("error", err.Error()))
 	}
 }
 func run() error {
-	return http.ListenAndServe(config.ServerFlags.Addr, handlers.Webhook())
+	return http.ListenAndServe(storage.ServerFlags.Addr, handlers.Webhook())
 }
