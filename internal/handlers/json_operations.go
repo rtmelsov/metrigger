@@ -7,7 +7,7 @@ import (
 	"strconv"
 
 	"github.com/rtmelsov/metrigger/internal/models"
-	"github.com/rtmelsov/metrigger/internal/server"
+	"github.com/rtmelsov/metrigger/internal/services"
 	"github.com/rtmelsov/metrigger/internal/storage"
 )
 
@@ -38,9 +38,9 @@ func JSONGet(w http.ResponseWriter, r *http.Request) {
 	var fn func(name string) (*storage.CounterMetric, *storage.GaugeMetric, error)
 	switch resp.MType {
 	case "counter":
-		fn = server.MetricsCounterGet
+		fn = services.MetricsCounterGet
 	case "gauge":
-		fn = server.MetricsGaugeGet
+		fn = services.MetricsGaugeGet
 	default:
 		http.Error(w, "", http.StatusNotFound)
 		return
@@ -90,14 +90,14 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		val = strconv.Itoa(int(*resp.Delta))
-		fn = server.MetricsCounterSet
+		fn = services.MetricsCounterSet
 	case "gauge":
 		if resp.Value == nil {
 			http.Error(w, "", http.StatusNotFound)
 			return
 		}
 		val = strconv.FormatFloat(*resp.Value, 'f', -1, 64)
-		fn = server.MetricsGaugeSet
+		fn = services.MetricsGaugeSet
 	default:
 		http.Error(w, "", http.StatusNotFound)
 		return

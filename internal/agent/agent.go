@@ -1,10 +1,10 @@
 package agent
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/config"
+	"github.com/rtmelsov/metrigger/internal/helpers"
 	"github.com/rtmelsov/metrigger/internal/models"
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
@@ -95,33 +95,36 @@ func RequestToServer(t string, key string, value float64, counter int64) {
 		}
 	}
 	data, err := json.Marshal(metric)
+	reqBody, err := helpers.CompressData(data)
+
 	logger := storage.GetMemStorage().GetLogger()
 	if err != nil {
 		logger.Panic("Error to Marshal SSON", zap.String("error", err.Error()))
 		return
 	}
-	requestBody := bytes.NewReader(data)
+
 	url := fmt.Sprintf("http://%s/update/", config.AgentFlags.Addr)
 
-	req, err := http.NewRequest("POST", url, requestBody)
+	req, err := http.NewRequest("POST", url, reqBody)
 
 	if err != nil {
-		logger.Panic("1 Request to server", zap.String("error", err.Error()))
+		logger.Panic("1 Request to services", zap.String("error", err.Error()))
 		return
 	}
 
-	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Content-Encoding", "gzip")
+	req.Header.Set("Accept-Encoding", "gzip")
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 
 	if err != nil {
-		logger.Panic("2 Request to server", zap.String("error", err.Error()))
+		logger.Panic("2 Request to services", zap.String("error", err.Error()))
 		return
 	}
 	err = resp.Body.Close()
 	if err != nil {
-		logger.Panic("3 Request to server", zap.String("error", err.Error()))
+		logger.Panic("3 Request to services", zap.String("error", err.Error()))
 		return
 	}
 

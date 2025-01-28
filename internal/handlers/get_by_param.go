@@ -7,13 +7,13 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/rtmelsov/metrigger/internal/server"
+	"github.com/rtmelsov/metrigger/internal/services"
 )
 
 func MetricsValueHandler(r chi.Router) {
 	ValueRequests := map[string]func(name string) (*storage.CounterMetric, *storage.GaugeMetric, error){
-		"counter": server.MetricsCounterGet,
-		"gauge":   server.MetricsGaugeGet,
+		"counter": services.MetricsCounterGet,
+		"gauge":   services.MetricsGaugeGet,
 	}
 	r.Post("/", JSONGet)
 	for k := range ValueRequests {
