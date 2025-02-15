@@ -13,7 +13,7 @@ func ServerParseFlag() {
 		flag.IntVar(&storage.ServerFlags.StoreInterval, "i", 300, "")
 		flag.StringVar(&storage.ServerFlags.FileStoragePath, "f", "file.txt", "")
 		flag.BoolVar(&storage.ServerFlags.Restore, "r", true, "")
-		flag.StringVar(&storage.ServerFlags.DataBaseDsn, "d", "postgres://test:test@localhost:5432/dbname?sslmode=disable", "")
+		flag.StringVar(&storage.ServerFlags.DataBaseDsn, "d", "", "")
 
 		flag.Parse()
 

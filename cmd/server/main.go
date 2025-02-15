@@ -15,17 +15,20 @@ func main() {
 
 	logger := storage.GetMemStorage().GetLogger()
 
-	_, err := db.GetDataBase()
-	if err != nil {
-		logger.Panic("error while running services", zap.String("error", err.Error()))
-		return
+	if storage.ServerFlags.DataBaseDsn != "" {
+		_, err := db.GetDataBase()
+		if err != nil {
+			logger.Panic("error while running services", zap.String("error", err.Error()))
+			return
+		}
 	}
+
 	prettyJSON, _ := json.MarshalIndent(storage.ServerFlags, "", "  ")
 	logger.Info("started", zap.String("services flags", string(prettyJSON)))
 
 	defer logger.Sync()
 
-	err = run()
+	err := run()
 	if err != nil {
 		logger.Panic("error while running services", zap.String("error", err.Error()))
 		return
