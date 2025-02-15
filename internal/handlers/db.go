@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func PingDbHandler(w http.ResponseWriter, r *http.Request) {
+func PingDBHandler(w http.ResponseWriter, r *http.Request) {
 	mem := storage.GetMemStorage()
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 

@@ -31,7 +31,7 @@ func Webhook() chi.Router {
 	r.Use(middleware.GzipParser)
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", MerticsListHandler)
-		r.Get("/ping", PingDbHandler)
+		r.Get("/ping", PingDBHandler)
 		r.Route("/update", MetricsUpdateHandler)
 		r.Route("/value", MetricsValueHandler)
 	})
