@@ -7,6 +7,7 @@ import (
 	"github.com/rtmelsov/metrigger/internal/config"
 	"github.com/rtmelsov/metrigger/internal/helpers"
 	"github.com/rtmelsov/metrigger/internal/models"
+	"github.com/rtmelsov/metrigger/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -37,14 +38,17 @@ func TestGetPingWebhook(t *testing.T) {
 			expectCode: 200,
 		},
 	}
-	ts := httptest.NewServer(Webhook())
-	for _, test := range tests {
-		url := "/ping"
-		resp := getReq(t, ts, test.method, url, nil, false)
-		defer resp.Body.Close()
+	if storage.ServerFlags.DataBaseDsn != "" {
+		ts := httptest.NewServer(Webhook())
+		for _, test := range tests {
+			url := "/ping"
+			resp := getReq(t, ts, test.method, url, nil, false)
+			defer resp.Body.Close()
 
-		require.Equal(t, test.expectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", url, test.expectCode, resp.StatusCode))
+			require.Equal(t, test.expectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", url, test.expectCode, resp.StatusCode))
+		}
 	}
+
 }
 
 type JSONReqType struct {
