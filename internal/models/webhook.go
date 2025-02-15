@@ -19,6 +19,7 @@ type ServerFlagsType struct {
 	StoreInterval   int    `env:"STORE_INTERVAL"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	Restore         bool   `env:"RESTORE"`
+	DataBaseDsn     string `env:"DATABASE_DSN"`
 }
 
 type CounterMetric struct {
@@ -35,3 +36,5 @@ type LocalStorage struct {
 	Gauge   map[string]GaugeMetric
 	File    *os.File
 }
+
+type MetricsCollector map[string]float64
