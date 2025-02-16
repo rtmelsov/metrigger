@@ -78,8 +78,6 @@ func NewGaugeMetric() *models.GaugeMetric {
 }
 
 func (m *MemStorage) GetGaugeMetric(name string) (*models.GaugeMetric, error) {
-	m.Mu.Lock()
-	defer m.Mu.Unlock()
 	var value models.GaugeMetric
 	value, ok := m.Gauge[name]
 	logger := GetMemStorage().GetLogger()
@@ -94,8 +92,6 @@ func (m *MemStorage) GetGaugeMetric(name string) (*models.GaugeMetric, error) {
 }
 
 func (m *MemStorage) GetCounterMetric(name string) (*models.CounterMetric, error) {
-	m.Mu.Lock()
-	defer m.Mu.Unlock()
 	var value models.CounterMetric
 	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
@@ -110,9 +106,6 @@ func (m *MemStorage) GetCounterMetric(name string) (*models.CounterMetric, error
 }
 
 func (m *MemStorage) SetCounterMetric(name string, value models.CounterMetric) {
-	m.Mu.Lock()
-	defer m.Mu.Unlock()
-
 	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
 	logger.Info("set data:",
@@ -126,9 +119,6 @@ func (m *MemStorage) SetCounterMetric(name string, value models.CounterMetric) {
 }
 
 func (m *MemStorage) SetGaugeMetric(name string, value models.GaugeMetric) {
-	m.Mu.Lock()
-	defer m.Mu.Unlock()
-
 	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
 	logger.Info("set data:",

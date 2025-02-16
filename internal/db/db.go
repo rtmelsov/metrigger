@@ -37,10 +37,11 @@ func GetDataBase() (*sql.DB, error) {
 			_, err = db.Exec(`
 			CREATE TABLE IF NOT EXISTS metrics (
 				id SERIAL PRIMARY KEY,
-				metric_name TEXT UNIQUE NOT NULL,
+				metric_name TEXT NOT NULL,
 				metric_type TEXT NOT NULL,
-				metric_value DOUBLE PRECISION NOT NULL
-			)
+				metric_value DOUBLE PRECISION NOT NULL,
+				UNIQUE (metric_name, metric_type)  -- Запрещает дубликаты в этих двух колонках
+			);
 		`)
 		}
 	})
