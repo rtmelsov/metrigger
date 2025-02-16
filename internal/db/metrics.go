@@ -35,5 +35,21 @@ func SetMetric(key string, name string, value string) error {
 	}
 	_, err = db.Exec(url, name, key, value)
 	log.Info("check set method", zap.String("key", key), zap.String("name", name), zap.Error(err))
+	rows, err := db.Query("SELECT id, metric_name, metric_type, metric_value FROM metrics")
+	defer rows.Close()
+
+	for rows.Next() {
+		// Читаем данные из таблицы и печатаем в консоль
+		var (
+			ID          int
+			MetricName  string
+			MetricType  string
+			MetricValue string
+		)
+		rows.Scan(&ID, &MetricName, &MetricType, &MetricValue)
+		log.Info("check set method", zap.String("MetricName", MetricName), zap.String("MetricValue", MetricValue), zap.String("MetricType", MetricType))
+	}
+
+	log.Info("checked set method")
 	return err
 }
