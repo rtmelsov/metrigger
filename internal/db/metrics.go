@@ -52,6 +52,9 @@ func SetMetric(key string, name string, value string) error {
 		rows.Scan(&ID, &MetricName, &MetricType, &MetricValue)
 		log.Info("check set method", zap.String("MetricName", MetricName), zap.String("MetricValue", MetricValue), zap.String("MetricType", MetricType))
 	}
+	if rows.Err() != nil {
+		return rows.Err()
+	}
 
 	log.Info("checked set method")
 	return err
