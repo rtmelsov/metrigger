@@ -10,11 +10,20 @@ func GetMetric(key string, name string) (string, error) {
 }
 
 func SetMetric(key string, name string, value string) error {
-	_, err = db.Exec(`
+	url := `
 		INSERT INTO metrics (metric_name, metric_type, metric_value)
         VALUES ($1, $2, $3)
         ON CONFLICT (metric_name, metric_type) 
         DO UPDATE SET metric_value = EXCLUDED.metric_value;
-	`, name, key, value)
+	`
+	if key == "counter" {
+		url = `
+			INSERT INTO metrics (metric_name, metric_type, metric_value)
+        	VALUES ($1, $2, $3)
+        	ON CONFLICT (metric_name, metric_type) 
+        	DO UPDATE SET metric_value = metrics.metric_value + EXCLUDED.metric_value;
+		`
+	}
+	_, err = db.Exec(url, name, key, value)
 	return err
 }
