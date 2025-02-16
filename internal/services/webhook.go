@@ -36,6 +36,7 @@ func MetricsGaugeSet(name string, val string) error {
 	mem.Mu.Lock()
 	defer mem.Mu.Unlock()
 	if storage.ServerFlags.DataBaseDsn != "" {
+		mem.GetLogger().Info("db set info", zap.String("name", name), zap.String("val", val))
 		return SetDBGauge(name, val)
 	}
 	met := storage.NewGaugeMetric()
@@ -54,6 +55,7 @@ func MetricsCounterSet(name string, val string) error {
 	mem.Mu.Lock()
 	defer mem.Mu.Unlock()
 	if storage.ServerFlags.DataBaseDsn != "" {
+		mem.GetLogger().Info("db set info", zap.String("name", name), zap.String("val", val))
 		return SetDBGounter(name, val)
 	}
 	met := storage.NewCounterMetric()
