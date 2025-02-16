@@ -8,18 +8,29 @@ import (
 )
 
 func MetricsCounterGet(name string) (*models.CounterMetric, *models.GaugeMetric, error) {
+	if storage.ServerFlags.DataBaseDsn != "" {
+		oldMet, err := GetDBCounter(name)
+		return oldMet, nil, err
+	}
 	mem := storage.GetMemStorage()
 	oldMet, err := mem.GetCounterMetric(name)
 	return oldMet, nil, err
 }
 
 func MetricsGaugeGet(name string) (*models.CounterMetric, *models.GaugeMetric, error) {
+	if storage.ServerFlags.DataBaseDsn != "" {
+		oldMet, err := GetDBGauge(name)
+		return nil, oldMet, err
+	}
 	mem := storage.GetMemStorage()
 	oldMet, err := mem.GetGaugeMetric(name)
 	return nil, oldMet, err
 }
 
 func MetricsGaugeSet(name string, val string) error {
+	if storage.ServerFlags.DataBaseDsn != "" {
+		return SetDBGauge(name, val)
+	}
 	mem := storage.GetMemStorage()
 	met := storage.NewGaugeMetric()
 	met.Type = "gauge"
@@ -33,6 +44,9 @@ func MetricsGaugeSet(name string, val string) error {
 }
 
 func MetricsCounterSet(name string, val string) error {
+	if storage.ServerFlags.DataBaseDsn != "" {
+		return SetDBGounter(name, val)
+	}
 	mem := storage.GetMemStorage()
 	met := storage.NewCounterMetric()
 	met.Type = "counter"

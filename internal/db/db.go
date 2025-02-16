@@ -26,9 +26,22 @@ func GetDataBase() (*sql.DB, error) {
 			return
 		}
 
-		if err = db.Ping(); err != nil {
-			m.GetLogger().Panic("error while ping db", zap.String("error", err.Error()))
-			return
+		if err == nil {
+			if err = db.Ping(); err != nil {
+				m.GetLogger().Panic("error while ping db", zap.String("error", err.Error()))
+				return
+			}
+		}
+
+		if err == nil {
+			_, err = db.Exec(`
+			CREATE TABLE IF NOT EXISTS metrics (
+				id SERIAL PRIMARY KEY,
+				metric_name TEXT UNIQUE NOT NULL,
+				metric_type TEXT NOT NULL,
+				metric_value DOUBLE PRECISION NOT NULL
+			)
+		`)
 		}
 	})
 
