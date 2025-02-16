@@ -36,6 +36,9 @@ func SetMetric(key string, name string, value string) error {
 	_, err = db.Exec(url, name, key, value)
 	log.Info("check set method", zap.String("key", key), zap.String("name", name), zap.Error(err))
 	rows, err := db.Query("SELECT id, metric_name, metric_type, metric_value FROM metrics")
+	if err != nil {
+		return err
+	}
 	defer rows.Close()
 
 	for rows.Next() {
