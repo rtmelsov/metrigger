@@ -13,7 +13,7 @@ func GetMetric(key string, name string) (string, error) {
 	var value string
 	err = row.Scan(&value)
 
-	log.Info("check get method", zap.String("key", key), zap.String("name", name), zap.Error(err))
+	log.Info("check get method", zap.String("key", key), zap.String("name", name), zap.String("error", err.Error()))
 	return value, nil
 }
 
@@ -34,6 +34,6 @@ func SetMetric(key string, name string, value string) error {
 		`
 	}
 	_, err = db.Exec(url, name, key, value)
-	log.Info("check get method", zap.String("key", key), zap.String("name", name), zap.Error(err))
+	log.Info("check set method", zap.String("key", key), zap.String("name", name), zap.String("error", err.Error()))
 	return err
 }
