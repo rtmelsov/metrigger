@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
-	"errors"
 	"github.com/rtmelsov/metrigger/internal/models"
 	"io"
 	"net/http"
@@ -43,22 +42,33 @@ func DecompressData(data []byte) (*bytes.Buffer, error) {
 	return &result, nil
 }
 
-func JSONParse(r *http.Request) (*models.Metrics, error) {
-	if r.Body == nil {
-		return nil, errors.New("body is empty")
-	}
-	var resp *models.Metrics
-	decode := json.NewDecoder(r.Body)
-	err := decode.Decode(&resp)
-
+func JSONParse(r *http.Request) (*[]models.Metrics, error) {
+	// Read request body
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
-	if resp.ID == "" {
-		return nil, errors.New("id is empty")
+	defer r.Body.Close()
+
+	var metrics []models.Metrics // Slice to store users
+
+	// Try parsing as a list (array)
+	if err := json.Unmarshal(body, &metrics); err != nil {
+		// If failed, try parsing as a single object
+		var metric models.Metrics
+		if err := json.Unmarshal(body, &metric); err != nil {
+			return nil, err
+		}
+		// Convert single user to slice
+		metrics = append(metrics, metric)
 	}
 
-	return resp, nil
+	// If no users found
+	if len(metrics) == 0 {
+		return nil, err
+	}
+
+	return &metrics, nil
 }
 
 func EmptyLocalStorage(path string) (*models.LocalStorage, error) {

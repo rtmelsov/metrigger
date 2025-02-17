@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"github.com/rtmelsov/metrigger/internal/helpers"
+	"github.com/rtmelsov/metrigger/internal/storage"
 	"net/http"
 	"strconv"
 
@@ -10,107 +11,151 @@ import (
 	"github.com/rtmelsov/metrigger/internal/services"
 )
 
-func JSONGet(w http.ResponseWriter, r *http.Request) {
-	resp, err := helpers.JSONParse(r)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	var fn func(name string) (*models.CounterMetric, *models.GaugeMetric, error)
-	switch resp.MType {
-	case "counter":
-		fn = services.MetricsCounterGet
-	case "gauge":
-		fn = services.MetricsGaugeGet
-	default:
-		http.Error(w, "", http.StatusNotFound)
-		return
-	}
-
-	var aliasErr *models.ErrorType
-	counter, gauge, aliasErr := GetMetricsValue(resp.ID, "", fn)
-	if aliasErr != nil {
-		http.Error(w, aliasErr.Text, aliasErr.StatusCode)
-		return
-	}
-
-	var metric interface{}
-	if resp.MType == "counter" {
-		num := int64(counter.Value)
-		resp.Delta = &num
-		metric = resp
-	} else {
-		resp.Value = &gauge.Value
-		metric = resp
-	}
-	data, err := json.Marshal(metric)
-	if err != nil {
-		http.Error(w, "Failed to Marshal JSON", http.StatusInternalServerError)
-		return
-	}
+func SendData(w http.ResponseWriter, data []byte) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
 }
 
-func JSONUpdate(w http.ResponseWriter, r *http.Request) {
-	resp, err := helpers.JSONParse(r)
+func JSONGet(w http.ResponseWriter, r *http.Request) {
+	response, err := helpers.JSONParse(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	var metrics []interface{}
 
-	var fn func(string, string) error
-
-	var val string
-
-	switch resp.MType {
-	case "counter":
-		if resp.Delta == nil {
-			http.Error(w, "", http.StatusNotFound)
-			return
-		}
-		val = strconv.Itoa(int(*resp.Delta))
-		fn = services.MetricsCounterSet
-	case "gauge":
-		if resp.Value == nil {
-			http.Error(w, "", http.StatusNotFound)
-			return
-		}
-		val = strconv.FormatFloat(*resp.Value, 'f', -1, 64)
-		fn = services.MetricsGaugeSet
-	default:
-		http.Error(w, "", http.StatusNotFound)
+	if len(*response) > 1 {
+		http.Error(w, "", http.StatusBadRequest)
 		return
 	}
 
-	aliasErr := SetMeticsUpdate(resp.ID, val, fn)
-	if aliasErr != nil {
-		http.Error(w, aliasErr.Text, aliasErr.StatusCode)
-		return
-	}
-
-	var metric interface{}
-	if resp.MType == "counter" {
-		obj, _, err := services.MetricsCounterGet(resp.ID)
-		if err != nil {
-			http.Error(w, "Failed to find element", http.StatusInternalServerError)
+	for _, resp := range *response {
+		var fn func(name string) (*models.CounterMetric, *models.GaugeMetric, error)
+		switch resp.MType {
+		case "counter":
+			fn = services.MetricsCounterGet
+		case "gauge":
+			fn = services.MetricsGaugeGet
+		default:
+			http.Error(w, "", http.StatusNotFound)
 			return
 		}
-		num := int64(obj.Value)
-		resp.Delta = &num
-		metric = resp
+
+		var aliasErr *models.ErrorType
+		counter, gauge, aliasErr := GetMetricsValue(resp.ID, "", fn)
+		if aliasErr != nil {
+			http.Error(w, aliasErr.Text, aliasErr.StatusCode)
+			return
+		}
+
+		var metric interface{}
+		if resp.MType == "counter" {
+			num := int64(counter.Value)
+			resp.Delta = &num
+			metric = resp
+		} else {
+			resp.Value = &gauge.Value
+			metric = resp
+		}
+		metrics = append(metrics, metric)
+	}
+	var data []byte
+	if len(metrics) == 1 {
+		data, err = json.Marshal(metrics[0])
 	} else {
-		_, obj, err := services.MetricsGaugeGet(resp.ID)
+		data, err = json.Marshal(metrics)
+	}
+	if err != nil {
+		http.Error(w, "Failed to Marshal JSON", http.StatusInternalServerError)
+		return
+	}
+	SendData(w, data)
+}
+
+func JSONUpdate(w http.ResponseWriter, r *http.Request) {
+	response, err := helpers.JSONParse(r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	var metrics []interface{}
+
+	if storage.ServerFlags.DataBaseDsn != "" && len(*response) > 1 {
+		updatedMetrics, err := UpdateMetrics(response)
 		if err != nil {
-			http.Error(w, "Failed to find element", http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		resp.Value = &obj.Value
-		metric = resp
+
+		data, err := json.Marshal(*updatedMetrics)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		SendData(w, data)
+		return
 	}
 
-	data, err := json.Marshal(metric)
+	for _, resp := range *response {
+		var fn func(string, string) error
+
+		var val string
+
+		switch resp.MType {
+		case "counter":
+			if resp.Delta == nil {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			val = strconv.Itoa(int(*resp.Delta))
+			fn = services.MetricsCounterSet
+		case "gauge":
+			if resp.Value == nil {
+				http.Error(w, "", http.StatusNotFound)
+				return
+			}
+			val = strconv.FormatFloat(*resp.Value, 'f', -1, 64)
+			fn = services.MetricsGaugeSet
+		default:
+			http.Error(w, "", http.StatusNotFound)
+			return
+		}
+
+		aliasErr := SetMeticsUpdate(resp.ID, val, fn)
+		if aliasErr != nil {
+			http.Error(w, aliasErr.Text, aliasErr.StatusCode)
+			return
+		}
+
+		var metric interface{}
+		if resp.MType == "counter" {
+			obj, _, err := services.MetricsCounterGet(resp.ID)
+			if err != nil {
+				http.Error(w, "Failed to find element", http.StatusInternalServerError)
+				return
+			}
+			num := int64(obj.Value)
+			resp.Delta = &num
+			metric = resp
+		} else {
+			_, obj, err := services.MetricsGaugeGet(resp.ID)
+			if err != nil {
+				http.Error(w, "Failed to find element", http.StatusInternalServerError)
+				return
+			}
+			resp.Value = &obj.Value
+			metric = resp
+		}
+		metrics = append(metrics, metric)
+
+	}
+	var data []byte
+	if len(metrics) == 1 {
+		data, err = json.Marshal(metrics[0])
+	} else {
+		data, err = json.Marshal(metrics)
+	}
 	if err != nil {
 		http.Error(w, "Failed to Marshal JSON", http.StatusInternalServerError)
 		return
