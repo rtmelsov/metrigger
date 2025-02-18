@@ -55,10 +55,6 @@ func GetMemStorage() *MemStorage {
 			File:    file.File,
 			Logger:  Log,
 		}
-
-		prettyJSON, _ := json.MarshalIndent(serverMem, "", "  ")
-		Log.Info("first time:",
-			zap.String("mem - ", string(prettyJSON)))
 	})
 	return serverMem
 }
