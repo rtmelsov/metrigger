@@ -38,6 +38,7 @@ func JSONGet(w http.ResponseWriter, r *http.Request) {
 		case "gauge":
 			fn = services.MetricsGaugeGet
 		default:
+			storage.GetMemStorage().GetLogger().Info("first in resp.MType check in get")
 			http.Error(w, "", http.StatusNotFound)
 			return
 		}
@@ -82,6 +83,7 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 	var metrics []interface{}
 
 	if storage.ServerFlags.DataBaseDsn != "" && len(*response) > 1 {
+		storage.GetMemStorage().GetLogger().Info("in db")
 		updatedMetrics, err := UpdateMetrics(response)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -95,6 +97,8 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 		}
 		SendData(w, data)
 		return
+	} else {
+		storage.GetMemStorage().GetLogger().Info("not in db")
 	}
 
 	for _, resp := range *response {
@@ -104,6 +108,7 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 
 		switch resp.MType {
 		case "counter":
+			storage.GetMemStorage().GetLogger().Info("first in update")
 			if resp.Delta == nil {
 				http.Error(w, "", http.StatusNotFound)
 				return
@@ -111,6 +116,8 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 			val = strconv.Itoa(int(*resp.Delta))
 			fn = services.MetricsCounterSet
 		case "gauge":
+
+			storage.GetMemStorage().GetLogger().Info("second in update")
 			if resp.Value == nil {
 				http.Error(w, "", http.StatusNotFound)
 				return
@@ -118,6 +125,8 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 			val = strconv.FormatFloat(*resp.Value, 'f', -1, 64)
 			fn = services.MetricsGaugeSet
 		default:
+
+			storage.GetMemStorage().GetLogger().Info("default in update")
 			http.Error(w, "", http.StatusNotFound)
 			return
 		}
