@@ -12,7 +12,7 @@ import (
 )
 
 func MetricsUpdateListHandler(r chi.Router) {
-	r.Post("/", JSONDBUpdate)
+	r.Post("/", JSONUpdateList)
 }
 
 func MetricsUpdateHandler(r chi.Router) {
