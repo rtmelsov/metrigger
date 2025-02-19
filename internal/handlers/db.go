@@ -39,7 +39,7 @@ func PingDBHandler(w http.ResponseWriter, r *http.Request) {
 func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 	Log := storage.GetMemStorage().GetLogger()
 
-	Log.Info("UpdateMetrics")
+	Log.Info("UpdateMetrics 1")
 	var newMetrics []models.Metrics
 	DB, err := db.GetDataBase()
 	if err != nil {
@@ -53,7 +53,10 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 	setGauge, setCounter, getGommand, err := getCommands(tx)
 	if err != nil {
 		Log.Panic("error while get command", zap.Error(err))
+		return nil, err
 	}
+
+	Log.Info("UpdateMetrics 2")
 	defer setGauge.Close()
 	defer setCounter.Close()
 	defer getGommand.Close()
@@ -100,6 +103,8 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 			})
 		}
 	}
+
+	Log.Info("UpdateMetrics 2")
 	err = tx.Commit()
 	if err != nil {
 		Log.Panic("error while commit", zap.Error(err))
