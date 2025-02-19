@@ -46,17 +46,19 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 		return nil, err
 	}
 
+	Log.Info("UpdateMetrics 2")
 	tx, err := DB.Begin()
 	if err != nil {
 		return nil, err
 	}
+
+	Log.Info("UpdateMetrics 3")
 	setGauge, setCounter, getGommand, err := getCommands(tx)
 	if err != nil {
 		Log.Panic("error while get command", zap.Error(err))
 		return nil, err
 	}
-
-	Log.Info("UpdateMetrics 2")
+	Log.Info("UpdateMetrics end")
 	defer setGauge.Close()
 	defer setCounter.Close()
 	defer getGommand.Close()
@@ -104,7 +106,6 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 		}
 	}
 
-	Log.Info("UpdateMetrics 2")
 	err = tx.Commit()
 	if err != nil {
 		Log.Panic("error while commit", zap.Error(err))
