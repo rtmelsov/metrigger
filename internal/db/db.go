@@ -44,6 +44,22 @@ func GetDataBase() (*sql.DB, error) {
 			);
 		`)
 		}
+		rows, err := db.Query(`select metric_name, metric_type, metric_value from metrics`)
+		if err != nil {
+			return
+		}
+		for rows.Next() {
+			var (
+				n string
+				t string
+				v float64
+			)
+			err = rows.Scan(&n, &t, &v)
+			if err != nil {
+				panic(err.Error())
+			}
+			m.GetLogger().Info("db info at start", zap.String("name", n), zap.String("type", t), zap.Float64("value", v))
+		}
 	})
 
 	return db, err
