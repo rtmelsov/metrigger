@@ -42,7 +42,10 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 	Log.Info("UpdateMetrics 1")
 	var newMetrics []models.Metrics
 	DB, err := db.GetDataBase()
+
+	Log.Info("UpdateMetrics 1.1")
 	if err != nil {
+		Log.Info("UpdateMetrics 1.2", zap.String("error", err.Error()))
 		return nil, err
 	}
 
