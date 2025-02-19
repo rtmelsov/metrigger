@@ -38,6 +38,8 @@ func PingDBHandler(w http.ResponseWriter, r *http.Request) {
 
 func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 	Log := storage.GetMemStorage().GetLogger()
+
+	Log.Info("UpdateMetrics")
 	var newMetrics []models.Metrics
 	DB, err := db.GetDataBase()
 	if err != nil {
