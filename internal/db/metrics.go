@@ -11,6 +11,7 @@ func GetMetric(key string, name string) (string, error) {
 	row := db.QueryRow(constants.GetRowCommand, key, name)
 	var value string
 	err = row.Scan(&value)
+	logger.Info("getting metric", zap.String("key", key), zap.String("name", name), zap.String("value", value))
 	if err != nil {
 		logger.Error("get method", zap.String("key", key), zap.String("name", name), zap.Error(err))
 		return "", err
