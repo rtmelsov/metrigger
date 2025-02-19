@@ -31,11 +31,14 @@ func JSONGet(w http.ResponseWriter, r *http.Request) {
 	var fn func(name string) (*models.CounterMetric, *models.GaugeMetric, error)
 	switch resp.MType {
 	case "counter":
+		storage.GetMemStorage().GetLogger().Info("resp.MType is counter")
 		fn = services.MetricsCounterGet
 	case "gauge":
+
+		storage.GetMemStorage().GetLogger().Info("resp.MType is counter")
 		fn = services.MetricsGaugeGet
 	default:
-		storage.GetMemStorage().GetLogger().Info("first in resp.MType check in get")
+		storage.GetMemStorage().GetLogger().Error("first in resp.MType check in get")
 		http.Error(w, "", http.StatusNotFound)
 		return
 	}
