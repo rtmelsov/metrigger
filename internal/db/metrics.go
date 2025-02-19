@@ -7,12 +7,12 @@ import (
 )
 
 func GetMetric(key string, name string) (string, error) {
-	log := storage.GetMemStorage().GetLogger()
+	logger := storage.GetMemStorage().GetLogger()
 	row := db.QueryRow(constants.GetRowCommand, key, name)
 	var value string
 	err = row.Scan(&value)
 	if err != nil {
-		log.Panic("get method", zap.String("key", key), zap.String("name", name), zap.Error(err))
+		logger.Error("get method", zap.String("key", key), zap.String("name", name), zap.Error(err))
 		return "", err
 	}
 	return value, nil
