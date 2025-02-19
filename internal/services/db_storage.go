@@ -12,7 +12,7 @@ func GetDBCounter(name string) (*models.CounterMetric, error) {
 	if err != nil {
 		return nil, err
 	}
-	num, err := strconv.Atoi(res)
+	num, err := strconv.ParseInt(res, 10, 64)
 	if err != nil {
 		fmt.Println("Error converting string to int:", err)
 		return nil, err

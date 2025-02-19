@@ -60,12 +60,12 @@ func MetricsCounterSet(name string, val string) error {
 	}
 	met := storage.NewCounterMetric()
 	met.Type = "counter"
-	i, err := strconv.Atoi(val)
+	i, err := strconv.ParseInt(val, 10, 64)
 	if err != nil {
 		return err
 	}
 
-	oldCount := 0
+	var oldCount int64 = 0
 	oldMet, err := mem.GetCounterMetric(name)
 	if err != nil {
 		logger := storage.GetMemStorage().GetLogger()

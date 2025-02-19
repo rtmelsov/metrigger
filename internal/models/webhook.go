@@ -24,7 +24,7 @@ type ServerFlagsType struct {
 
 type CounterMetric struct {
 	Type  string
-	Value int
+	Value int64
 }
 type GaugeMetric struct {
 	Type  string
