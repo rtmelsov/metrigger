@@ -182,7 +182,7 @@ func update(resp *models.Metrics) (*interface{}, int, error) {
 		if err != nil {
 			return nil, http.StatusInternalServerError, errors.New("failed to find element")
 		}
-		num := int64(obj.Value)
+		num := obj.Value
 		resp.Delta = &num
 		metric = resp
 	} else {

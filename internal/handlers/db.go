@@ -9,6 +9,7 @@ import (
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
 	"net/http"
+	"strconv"
 )
 
 func PingDBHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,17 +52,17 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 		return nil, err
 	}
 
-	setGauge, setCounter, getGommand, err := getCommands(tx)
+	setGauge, setCounter, getGaugeGommand, getDeltaGommand, err := getCommands(tx)
 	if err != nil {
 		Log.Panic("error while get command", zap.Error(err))
 		return nil, err
 	}
 	defer setGauge.Close()
 	defer setCounter.Close()
-	defer getGommand.Close()
+	defer getGaugeGommand.Close()
+	defer getDeltaGommand.Close()
 
 	for _, v := range *response {
-
 		Log.Info("range *response", zap.String("key", v.MType), zap.String("name", v.ID), zap.Any("value", v.Value), zap.Any("delta", v.Delta))
 		switch v.MType {
 		case "gauge":
@@ -77,7 +78,8 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 			_, err = setCounter.Exec(v.ID, v.MType, v.Delta)
 
 		default:
-
+			Log.Panic("error while exec", zap.Error(err))
+			return nil, err
 		}
 
 		if err != nil {
@@ -85,23 +87,45 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 			Log.Panic("error while exec", zap.Error(err))
 			return nil, err
 		}
-		var value float64
-		var delta int64
+
 		if v.MType == "gauge" {
-			err = getGommand.QueryRow(v.MType, v.ID).Scan(&value)
+
+			var value string
+			err = getGaugeGommand.QueryRow(v.MType, v.ID).Scan(&value)
+			if err != nil {
+				Log.Panic("error while query row", zap.Error(err))
+				return nil, err
+			}
+			f, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				Log.Panic("error while query row", zap.Error(err))
+				return nil, err
+			}
 			newMetrics = append(newMetrics, models.Metrics{
 				ID:    v.ID,
 				MType: v.MType,
-				Value: &value,
+				Value: &f,
 			})
 		} else {
-			err = getGommand.QueryRow(v.MType, v.ID).Scan(&delta)
+
+			var delta string
+			err = getDeltaGommand.QueryRow(v.MType, v.ID).Scan(&delta)
+			if err != nil {
+				Log.Panic("error while query row", zap.Error(err))
+				return nil, err
+			}
+			d, err := strconv.ParseInt(delta, 10, 64)
+			if err != nil {
+				Log.Panic("error while parsing", zap.Error(err))
+				return nil, err
+			}
 			newMetrics = append(newMetrics, models.Metrics{
 				ID:    v.ID,
 				MType: v.MType,
-				Delta: &delta,
+				Delta: &d,
 			})
 		}
+
 	}
 
 	err = tx.Commit()
@@ -112,24 +136,29 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 	return &newMetrics, nil
 }
 
-func getCommands(tx *sql.Tx) (*sql.Stmt, *sql.Stmt, *sql.Stmt, error) {
+func getCommands(tx *sql.Tx) (*sql.Stmt, *sql.Stmt, *sql.Stmt, *sql.Stmt, error) {
 	setGauge, err := tx.Prepare(constants.GaugeCommand)
 	if err != nil {
 		tx.Rollback()
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
 	setCounter, err := tx.Prepare(constants.CounterCommand)
 	if err != nil {
 		tx.Rollback()
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
-	getCommand, err := tx.Prepare(constants.GetRowCommand)
+	getGaugeCommand, err := tx.Prepare(constants.GetGaugeRowCommand)
 	if err != nil {
 		tx.Rollback()
-		return nil, nil, nil, err
+		return nil, nil, nil, nil, err
 	}
 
-	return setGauge, setCounter, getCommand, nil
+	getCounterCommand, err := tx.Prepare(constants.GetCounterRowCommand)
+	if err != nil {
+		tx.Rollback()
+		return nil, nil, nil, nil, err
+	}
+	return setGauge, setCounter, getGaugeCommand, getCounterCommand, nil
 }

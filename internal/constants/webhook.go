@@ -59,9 +59,13 @@ var GaugeCommand = `
         DO UPDATE SET metric_value = EXCLUDED.metric_value;
 	`
 var CounterCommand = `
-			INSERT INTO metrics (metric_name, metric_type, metric_value)
+			INSERT INTO metrics (metric_name, metric_type, metric_delta)
         	VALUES ($1, $2, $3)
         	ON CONFLICT (metric_name, metric_type) 
-        	DO UPDATE SET metric_value = metrics.metric_value + EXCLUDED.metric_value;
+        	DO UPDATE SET metric_delta = metrics.metric_delta + EXCLUDED.metric_delta;
 		`
-var GetRowCommand = `SELECT metric_value from metrics where metric_type = $1 and metric_name = $2`
+var GetGaugeRowCommand = `SELECT metric_value FROM metrics WHERE metric_type = $1 AND metric_name = $2`
+
+var GetCounterRowCommand = `SELECT metric_delta FROM metrics WHERE metric_type = $1 AND metric_name = $2`
+
+var GetRowCommand = `SELECT metric_value, metric_delta FROM metrics WHERE metric_type = $1 AND metric_name = $2`

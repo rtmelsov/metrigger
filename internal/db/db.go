@@ -40,7 +40,8 @@ func GetDataBase() (*sql.DB, error) {
 				id SERIAL PRIMARY KEY,
 				metric_name TEXT NOT NULL,
 				metric_type TEXT NOT NULL,
-				metric_value DOUBLE PRECISION NOT NULL,
+				metric_value DOUBLE PRECISION,
+				metric_delta BIGINT,
 				UNIQUE (metric_name, metric_type)  -- Запрещает дубликаты в этих двух колонках
 			);
 		`)
