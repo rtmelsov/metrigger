@@ -80,7 +80,7 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	metric, err, statusCode := update(resp)
+	metric, statusCode, err := update(resp)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("%v: %v", "error while updating", err.Error()), statusCode)
 		return
@@ -125,7 +125,7 @@ func JSONUpdateList(w http.ResponseWriter, r *http.Request) {
 	}
 	var dataList []interface{}
 	for _, v := range *response {
-		metric, err, statusCode := update(&v)
+		metric, statusCode, err := update(&v)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("%v: %v", "error while updating", err.Error()), statusCode)
 			return
@@ -143,7 +143,7 @@ func JSONUpdateList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func update(resp *models.Metrics) (*interface{}, error, int) {
+func update(resp *models.Metrics) (*interface{}, int, error) {
 	var fn func(string, string) error
 
 	var val string
@@ -152,7 +152,7 @@ func update(resp *models.Metrics) (*interface{}, error, int) {
 	case "counter":
 		storage.GetMemStorage().GetLogger().Info("first in update")
 		if resp.Delta == nil {
-			return nil, errors.New("error while checking delta"), http.StatusNotFound
+			return nil, http.StatusNotFound, errors.New("error while checking delta")
 		}
 		val = strconv.Itoa(int(*resp.Delta))
 		fn = services.MetricsCounterSet
@@ -160,24 +160,24 @@ func update(resp *models.Metrics) (*interface{}, error, int) {
 
 		storage.GetMemStorage().GetLogger().Info("second in update")
 		if resp.Value == nil {
-			return nil, errors.New("error while checking value"), http.StatusNotFound
+			return nil, http.StatusNotFound, errors.New("error while checking value")
 		}
 		val = strconv.FormatFloat(*resp.Value, 'f', -1, 64)
 		fn = services.MetricsGaugeSet
 	default:
-		return nil, errors.New("can't find type"), http.StatusNotFound
+		return nil, http.StatusNotFound, errors.New("can't find type")
 	}
 
 	aliasErr := SetMeticsUpdate(resp.ID, val, fn)
 	if aliasErr != nil {
-		return nil, errors.New(aliasErr.Text), aliasErr.StatusCode
+		return nil, aliasErr.StatusCode, errors.New(aliasErr.Text)
 	}
 
 	var metric interface{}
 	if resp.MType == "counter" {
 		obj, _, err := services.MetricsCounterGet(resp.ID)
 		if err != nil {
-			return nil, errors.New("failed to find element"), http.StatusInternalServerError
+			return nil, http.StatusInternalServerError, errors.New("failed to find element")
 		}
 		num := int64(obj.Value)
 		resp.Delta = &num
@@ -185,10 +185,10 @@ func update(resp *models.Metrics) (*interface{}, error, int) {
 	} else {
 		_, obj, err := services.MetricsGaugeGet(resp.ID)
 		if err != nil {
-			return nil, errors.New("failed to find element"), http.StatusInternalServerError
+			return nil, http.StatusInternalServerError, errors.New("failed to find element")
 		}
 		resp.Value = &obj.Value
 		metric = resp
 	}
-	return &metric, nil, 0
+	return &metric, 0, nil
 }
