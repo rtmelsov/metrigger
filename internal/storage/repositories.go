@@ -104,7 +104,7 @@ func (m *MemStorage) GetCounterMetric(name string) (*models.CounterMetric, error
 func (m *MemStorage) SetCounterMetric(name string, value models.CounterMetric) {
 	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	logger.Info("set data:",
+	logger.Info("set data first:",
 		zap.String("SetCounterMetric name", name),
 		zap.String("SetCounterMetric value", string(prettyJSON)))
 
@@ -117,7 +117,7 @@ func (m *MemStorage) SetCounterMetric(name string, value models.CounterMetric) {
 func (m *MemStorage) SetGaugeMetric(name string, value models.GaugeMetric) {
 	logger := GetMemStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	logger.Info("set data:",
+	logger.Info("set data second:",
 		zap.String("set gauge metric name", name),
 		zap.String("set gauge metric value", string(prettyJSON)))
 	m.Gauge[name] = value

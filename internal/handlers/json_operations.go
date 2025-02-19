@@ -11,10 +11,11 @@ import (
 	"github.com/rtmelsov/metrigger/internal/services"
 )
 
-func SendData(w http.ResponseWriter, data []byte) {
+func SendData(w http.ResponseWriter, data []byte) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	_, err := w.Write(data)
+	return err
 }
 
 func JSONGet(w http.ResponseWriter, r *http.Request) {
@@ -71,7 +72,11 @@ func JSONGet(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to Marshal JSON", http.StatusInternalServerError)
 		return
 	}
-	SendData(w, data)
+	err = SendData(w, data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	return
 }
 
 func JSONUpdate(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +101,11 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		SendData(w, data)
+
+		err = SendData(w, data)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
 		return
 	} else {
 		storage.GetMemStorage().GetLogger().Info("not in db")
