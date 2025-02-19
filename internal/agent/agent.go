@@ -41,7 +41,7 @@ func Run() {
 			return
 		}
 
-		url := fmt.Sprintf("http://%s/update/", config.AgentFlags.Addr)
+		url := fmt.Sprintf("http://%s/updates/", config.AgentFlags.Addr)
 
 		req, err := http.NewRequest("POST", url, reqBody)
 

@@ -42,7 +42,7 @@ func DecompressData(data []byte) (*bytes.Buffer, error) {
 	return &result, nil
 }
 
-func JSONParse(r *http.Request) (*[]models.Metrics, error) {
+func JSONListParse(r *http.Request) (*[]models.Metrics, error) {
 	// Read request body
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -54,13 +54,7 @@ func JSONParse(r *http.Request) (*[]models.Metrics, error) {
 
 	// Try parsing as a list (array)
 	if err := json.Unmarshal(body, &metrics); err != nil {
-		// If failed, try parsing as a single object
-		var metric models.Metrics
-		if err := json.Unmarshal(body, &metric); err != nil {
-			return nil, err
-		}
-		// Convert single user to slice
-		metrics = append(metrics, metric)
+		return nil, err
 	}
 
 	// If no users found
@@ -69,6 +63,23 @@ func JSONParse(r *http.Request) (*[]models.Metrics, error) {
 	}
 
 	return &metrics, nil
+}
+
+func JSONElementParse(r *http.Request) (*models.Metrics, error) {
+	// Read request body
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer r.Body.Close()
+
+	var metric models.Metrics // Slice to store users
+
+	if err := json.Unmarshal(body, &metric); err != nil {
+		return nil, err
+	}
+
+	return &metric, nil
 }
 
 func EmptyLocalStorage(path string) (*models.LocalStorage, error) {

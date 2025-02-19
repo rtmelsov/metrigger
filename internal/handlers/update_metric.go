@@ -11,6 +11,10 @@ import (
 	"github.com/rtmelsov/metrigger/internal/services"
 )
 
+func MetricsUpdateListHandler(r chi.Router) {
+	r.Post("/", JSONDBUpdate)
+}
+
 func MetricsUpdateHandler(r chi.Router) {
 	UpdateRequests := map[string]func(string, string) error{
 		"counter": services.MetricsCounterSet,
