@@ -75,6 +75,7 @@ func JSONGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func JSONUpdate(w http.ResponseWriter, r *http.Request) {
+	storage.GetMemStorage().GetLogger().Info("in update handler")
 	response, err := helpers.JSONParse(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
