@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/rtmelsov/metrigger/internal/storage"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -10,6 +11,7 @@ import (
 )
 
 func MetricsUpdateHandler(r chi.Router) {
+	storage.GetMemStorage().GetLogger().Info("update handler")
 	UpdateRequests := map[string]func(string, string) error{
 		"counter": services.MetricsCounterSet,
 		"gauge":   services.MetricsGaugeSet,
