@@ -60,6 +60,9 @@ func GetDataBase() (*sql.DB, error) {
 			}
 			m.GetLogger().Info("db info at start", zap.String("name", n), zap.String("type", t), zap.Float64("value", v))
 		}
+		if err = rows.Err(); err != nil {
+			return
+		}
 	})
 
 	return db, err
