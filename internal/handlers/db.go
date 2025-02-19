@@ -62,7 +62,7 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 
 	for _, v := range *response {
 
-		Log.Info("range *response", zap.String("name", v.ID))
+		Log.Info("range *response", zap.String("key", v.MType), zap.String("name", v.ID), zap.Any("value", v.Value), zap.Any("delta", v.Delta))
 		switch v.MType {
 		case "gauge":
 			if v.Value == nil {
