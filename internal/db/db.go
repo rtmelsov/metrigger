@@ -16,6 +16,7 @@ var (
 )
 
 func GetDataBase() (*sql.DB, error) {
+	err = nil
 	once.Do(func() {
 		m := storage.GetMemStorage()
 		//db, err = sql.Open("postgres", "test:test@/dbname")
