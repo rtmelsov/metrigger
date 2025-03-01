@@ -21,6 +21,14 @@ func TestMain(m *testing.M) {
 	// Parse flags for testing
 	config.ServerParseFlag()
 
+	filePath := storage.ServerFlags.FileStoragePath // Change this to the file you want to delete
+
+	err := os.Remove(filePath)
+	if err != nil {
+		fmt.Println("Error deleting file:", err)
+		//return
+	}
+
 	// Run tests
 	code := m.Run()
 	os.Exit(code)
