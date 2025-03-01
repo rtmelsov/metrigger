@@ -18,7 +18,10 @@ func Run() {
 	logger := config.GetAgentStorage().GetLogger()
 	go metrics.CollectMetrics(PollCount, met)
 	prettyJSON, _ := json.MarshalIndent(config.AgentFlags, "", "  ")
-	logger.Info("started", zap.String("agent flags", string(prettyJSON)))
+	logger.Info("started",
+		zap.String("agent flags", string(prettyJSON)),
+		zap.String("timestamp", time.Now().Format(time.RFC3339)),
+	)
 	for {
 		var metricList []*models.Metrics
 		time.Sleep(time.Duration(config.AgentFlags.ReportInterval) * time.Second)

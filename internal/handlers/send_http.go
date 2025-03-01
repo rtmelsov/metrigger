@@ -7,7 +7,7 @@ import (
 )
 
 func SendData(w http.ResponseWriter, data []byte) error {
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	// Если ключ есть, добавляем хеш в заголовок ответа
 	if storage.ServerFlags.JwtKey != "" {
 		responseHash := helpers.ComputeHMACSHA256(data, storage.ServerFlags.JwtKey)

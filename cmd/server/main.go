@@ -8,6 +8,7 @@ import (
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
 	"net/http"
+	"time"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func main() {
 			logger.Panic("error while running services", zap.String("error", err.Error()))
 			return
 		} else {
-			logger.Info("database is connected")
+			logger.Info("database is connected", zap.String("timestamp", time.Now().Format(time.RFC3339)))
 		}
 	}
 
