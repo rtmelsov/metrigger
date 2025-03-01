@@ -89,7 +89,6 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 		}
 
 		if v.MType == "gauge" {
-
 			var value string
 			err = getGaugeGommand.QueryRow(v.MType, v.ID).Scan(&value)
 			if err != nil {
@@ -107,7 +106,6 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 				Value: &f,
 			})
 		} else {
-
 			var delta string
 			err = getDeltaGommand.QueryRow(v.MType, v.ID).Scan(&delta)
 			if err != nil {

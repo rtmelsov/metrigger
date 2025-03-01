@@ -8,7 +8,6 @@ import (
 	"github.com/rtmelsov/metrigger/internal/metrics"
 	"github.com/rtmelsov/metrigger/internal/models"
 	"go.uber.org/zap"
-	"io"
 	"net/http"
 	"time"
 )
@@ -50,6 +49,11 @@ func Run() {
 			return
 		}
 
+		if config.AgentFlags.JwtKey != "" {
+			hash := helpers.ComputeHMACSHA256(data, config.AgentFlags.JwtKey)
+			req.Header.Set("HashSHA256", hash)
+		}
+
 		req.Header.Set("Content-Encoding", "gzip")
 		req.Header.Set("Accept-Encoding", "gzip")
 
@@ -60,13 +64,14 @@ func Run() {
 			logger.Panic("2 Request to services", zap.String("error", err.Error()))
 			return
 		}
-		respMetric, err := io.ReadAll(resp.Body)
-		if err != nil {
-			logger.Panic("error while to read", zap.String("error", err.Error()))
-			return
+
+		if resp.StatusCode != 200 {
+			logger.Error("status code: ", zap.Int("code", resp.StatusCode))
 		}
 
-		logger.Info("respMetric", zap.String("metrc", string(respMetric)))
+		if config.AgentFlags.JwtKey != "" {
+			logger.Info("hash answer", zap.String("HashSHA256", resp.Header.Get("HashSHA256")))
+		}
 
 		err = resp.Body.Close()
 		if err != nil {
@@ -75,24 +80,4 @@ func Run() {
 		}
 		logger.Info("requested")
 	}
-}
-
-func RequestToServer(t string, key string, value float64, counter int64) *models.Metrics {
-	var metric *models.Metrics
-
-	if t == "counter" {
-		metric = &models.Metrics{
-			MType: t,
-			ID:    key,
-			Delta: &counter,
-		}
-	} else {
-		metric = &models.Metrics{
-			MType: t,
-			ID:    key,
-			Value: &value,
-		}
-	}
-
-	return metric
 }

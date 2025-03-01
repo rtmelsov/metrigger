@@ -13,13 +13,6 @@ import (
 	"github.com/rtmelsov/metrigger/internal/services"
 )
 
-func SendData(w http.ResponseWriter, data []byte) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	_, err := w.Write(data)
-	return err
-}
-
 func JSONGet(w http.ResponseWriter, r *http.Request) {
 	resp, err := helpers.JSONElementParse(r)
 	if err != nil {

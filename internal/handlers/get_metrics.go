@@ -28,12 +28,10 @@ func MetricsValueHandler(r chi.Router) {
 					w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 					switch k {
 					case "counter":
-						w.WriteHeader(http.StatusOK)
-						w.Write([]byte(fmt.Sprintf("%v", counter.Value)))
+						SendData(w, []byte(fmt.Sprintf("%v", counter.Value)))
 						return
 					case "gauge":
-						w.WriteHeader(http.StatusOK)
-						w.Write([]byte(fmt.Sprintf("%v", gauge.Value)))
+						SendData(w, []byte(fmt.Sprintf("%v", gauge.Value)))
 						return
 					default:
 						http.Error(w, "Can't find parameters", http.StatusBadRequest)

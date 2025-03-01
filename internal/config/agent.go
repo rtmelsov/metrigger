@@ -12,6 +12,7 @@ type AgentFlagsType struct {
 	ReportInterval int    `env:"REPORT_INTERVAL"`
 	PollInterval   int    `env:"POLL_INTERVAL"`
 	Addr           string `env:"ADDRESS"`
+	JwtKey         string `env:"KEY"`
 }
 
 var (
@@ -26,6 +27,7 @@ func AgentParseFlag() {
 		flag.IntVar(&AgentFlags.ReportInterval, "r", 10, "report interval")
 		flag.StringVar(&AgentFlags.Addr, "a", "localhost:8080", "host and port to run services")
 		flag.IntVar(&AgentFlags.PollInterval, "p", 2, "poll interval")
+		flag.StringVar(&AgentFlags.JwtKey, "k", "server_key", "jwt key")
 
 		flag.Parse()
 
