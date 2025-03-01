@@ -339,14 +339,14 @@ func TestGetWebhook(t *testing.T) {
 		{
 			name:        "1",
 			method:      "GET",
-			contentType: "text/plain; charset=utf-8",
+			contentType: "application/json",
 			expectCode:  200,
 			url:         "/value/counter/fdsafd",
 		},
 		{
 			name:        "2",
 			method:      "GET",
-			contentType: "text/plain; charset=utf-8",
+			contentType: "application/json",
 			expectCode:  200,
 			url:         "/value/gauge/fdsafd",
 		},
