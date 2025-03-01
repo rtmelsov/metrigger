@@ -12,7 +12,8 @@ import (
 func JwtParser(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		storage.GetMemStorage().GetLogger().Info("jwt parser", zap.String("jwt", storage.ServerFlags.JwtKey))
-		if storage.ServerFlags.JwtKey != "" {
+		receivedHash := r.Header.Get("HashSHA256")
+		if storage.ServerFlags.JwtKey != "" && receivedHash != "" {
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				http.Error(w, "Failed to read request body", http.StatusBadRequest)
@@ -20,7 +21,6 @@ func JwtParser(h http.Handler) http.Handler {
 			}
 
 			expectedHash := helpers.ComputeHMACSHA256(body, storage.ServerFlags.JwtKey)
-			receivedHash := r.Header.Get("HashSHA256")
 
 			storage.GetMemStorage().GetLogger().Info("comparing hashes",
 				zap.String("expectedHash", expectedHash),
