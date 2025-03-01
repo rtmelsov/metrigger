@@ -56,6 +56,7 @@ func Run() {
 
 		req.Header.Set("Content-Encoding", "gzip")
 		req.Header.Set("Accept-Encoding", "gzip")
+		req.Header.Set("Content-Type", "application/json")
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
