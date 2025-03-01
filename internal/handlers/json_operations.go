@@ -14,6 +14,7 @@ import (
 )
 
 func JSONGet(w http.ResponseWriter, r *http.Request) {
+	storage.GetMemStorage().GetLogger().Info("request func: JSONGet")
 	resp, err := helpers.JSONElementParse(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -70,7 +71,7 @@ func JSONGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func JSONUpdate(w http.ResponseWriter, r *http.Request) {
-	storage.GetMemStorage().GetLogger().Info("in update handler")
+	storage.GetMemStorage().GetLogger().Info("request func: JSONUpdate")
 	resp, err := helpers.JSONElementParse(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -93,6 +94,8 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func JSONUpdateList(w http.ResponseWriter, r *http.Request) {
+	storage.GetMemStorage().GetLogger().Info("request func: JSONUpdateList")
+
 	response, err := helpers.JSONListParse(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

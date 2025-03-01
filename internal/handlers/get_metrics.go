@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/models"
+	"github.com/rtmelsov/metrigger/internal/storage"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -18,6 +19,7 @@ func MetricsValueHandler(r chi.Router) {
 	for k := range ValueRequests {
 		r.Route(fmt.Sprintf("/%s", k), func(r chi.Router) {
 			r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
+				storage.GetMemStorage().GetLogger().Info("request func: get value handler")
 				if fn, exist := ValueRequests[k]; exist {
 					metName, extra := GetMetricData(r)
 					counter, gauge, err := GetMetricsValue(metName, extra, fn)

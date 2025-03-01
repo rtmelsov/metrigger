@@ -27,7 +27,7 @@ func GetMetricData(r *http.Request) (string, string) {
 
 func Webhook() chi.Router {
 	r := chi.NewRouter()
-	r.Use(middleware.Logger)
+	//r.Use(middleware.Logger)
 	r.Use(middleware.GzipParser)
 	r.Use(middleware.JwtParser)
 	r.Route("/", func(r chi.Router) {

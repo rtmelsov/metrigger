@@ -10,6 +10,7 @@ import (
 )
 
 func MerticsListHandler(w http.ResponseWriter, r *http.Request) {
+	storage.GetMemStorage().GetLogger().Info("request func: MerticsListHandler")
 	mem := storage.GetMemStorage()
 	t, err := template.New("webpage").Parse(constants.Tmpl)
 
