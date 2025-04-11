@@ -19,8 +19,9 @@ func Run() {
 		zap.String("agent flags", string(prettyJSON)),
 		zap.String("timestamp", time.Now().Format(time.RFC3339)),
 	)
-	for {
-		time.Sleep(time.Duration(config.AgentFlags.ReportInterval) * time.Second)
+	t := time.NewTicker(time.Duration(config.AgentFlags.ReportInterval) * time.Second)
+	for range t.C {
+		logger.Info("tick")
 		var metricList []*models.Metrics
 		for k, b := range <-met {
 			counter := RequestToServer("counter", k, 0, 1)

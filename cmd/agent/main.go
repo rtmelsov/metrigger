@@ -1,40 +1,31 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/rtmelsov/metrigger/internal/agent"
 	"github.com/rtmelsov/metrigger/internal/config"
 	"go.uber.org/zap"
-	"net"
-	"time"
 )
-
-func waitForServer(address string) error {
-	var timeouts = []int{1, 3, 5}
-	for _, el := range timeouts {
-		conn, err := net.Dial("tcp", address)
-		if err == nil {
-			conn.Close()
-			return nil // Сервер доступен
-		}
-		time.Sleep(time.Duration(el) * time.Second)
-	}
-	return fmt.Errorf("services not available at %s after %v", address, timeouts[len(timeouts)-1])
-}
 
 func main() {
 	config.AgentParseFlag()
 	logger := config.GetAgentStorage().GetLogger()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	// Проверка доступности сервера
-	err := waitForServer(config.AgentFlags.Addr)
+	err := agent.WaitForServer(ctx, config.AgentFlags.Addr)
 	if err != nil {
 		logger.Error("Server not available", zap.String("error", err.Error()))
 		return
 	}
 
-	prettyJSON, _ := json.MarshalIndent(config.AgentFlags, "", "  ")
+	prettyJSON, err := json.MarshalIndent(config.AgentFlags, "", "  ")
+	if err != nil {
+		logger.Error("Error while try to marshal agent flags", zap.String("error", err.Error()))
+		return
+	}
 	logger.Info("started", zap.String("agent flags", string(prettyJSON)))
 
 	agent.Run()
