@@ -39,5 +39,5 @@ type GetWebhook = []struct {
 	Method      string
 	ContentType string
 	ExpectCode  int
-	Url         string
+	URL         string
 }
