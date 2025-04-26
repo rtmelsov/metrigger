@@ -182,20 +182,20 @@ var GetWebhook = models.GetWebhook{
 		Method:      "GET",
 		ContentType: "application/json",
 		ExpectCode:  200,
-		Url:         "/value/counter/fdsafd",
+		URL:         "/value/counter/fdsafd",
 	},
 	{
 		Name:        "2",
 		Method:      "GET",
 		ContentType: "application/json",
 		ExpectCode:  200,
-		Url:         "/value/gauge/fdsafd",
+		URL:         "/value/gauge/fdsafd",
 	},
 	{
 		Name:        "3",
 		Method:      "GET",
 		ContentType: "text/html",
 		ExpectCode:  200,
-		Url:         "/",
+		URL:         "/",
 	},
 }

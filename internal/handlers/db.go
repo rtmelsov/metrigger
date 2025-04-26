@@ -12,6 +12,10 @@ import (
 	"strconv"
 )
 
+// PingDBHandler обрабатывает HTTP-запрос для проверки соединения с базой данных.
+//
+// При успешной проверке возвращает статус 200 OK и сообщение "ok".
+// В случае ошибки — пишет ошибку в ответ и логирует её.
 func PingDBHandler(w http.ResponseWriter, r *http.Request) {
 	mem := storage.GetMemStorage()
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -37,6 +41,15 @@ func PingDBHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// UpdateMetrics обновляет метрики в базе данных.
+//
+// Принимает список метрик `response`, обновляет их значения в транзакции и возвращает
+// актуальные значения метрик. В случае ошибки возвращает ошибку.
+//
+// Возможные ошибки:
+// - ошибка подключения к базе данных
+// - ошибка выполнения SQL-запросов
+// - ошибка при парсинге данных
 func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 	Log := storage.GetMemStorage().GetLogger()
 

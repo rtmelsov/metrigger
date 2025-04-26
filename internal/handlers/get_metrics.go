@@ -2,12 +2,11 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/go-chi/chi/v5"
 	"github.com/rtmelsov/metrigger/internal/models"
+	"github.com/rtmelsov/metrigger/internal/services"
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"net/http"
-
-	"github.com/go-chi/chi/v5"
-	"github.com/rtmelsov/metrigger/internal/services"
 )
 
 func MetricsValueHandler(r chi.Router) {
@@ -30,10 +29,16 @@ func MetricsValueHandler(r chi.Router) {
 					w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 					switch k {
 					case "counter":
-						SendData(w, []byte(fmt.Sprintf("%v", counter.Value)))
+						err := SendData(w, []byte(fmt.Sprintf("%v", counter.Value)))
+						if err != nil {
+							http.Error(w, "Can't send response", http.StatusInternalServerError)
+						}
 						return
 					case "gauge":
-						SendData(w, []byte(fmt.Sprintf("%v", gauge.Value)))
+						err := SendData(w, []byte(fmt.Sprintf("%v", gauge.Value)))
+						if err != nil {
+							http.Error(w, "Can't send response", http.StatusInternalServerError)
+						}
 						return
 					default:
 						http.Error(w, "Can't find parameters", http.StatusBadRequest)
