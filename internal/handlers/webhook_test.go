@@ -136,10 +136,10 @@ func TestPostWebhook(t *testing.T) {
 func TestGetWebhook(t *testing.T) {
 	ts := httptest.NewServer(Webhook())
 	for _, test := range constants.GetWebhook {
-		resp := getReq(t, ts, test.Method, test.Url, nil, false)
+		resp := getReq(t, ts, test.Method, test.URL, nil, false)
 		defer resp.Body.Close()
 
-		require.Equal(t, test.ExpectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", test.Url, test.ExpectCode, resp.StatusCode))
+		require.Equal(t, test.ExpectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", test.URL, test.ExpectCode, resp.StatusCode))
 		require.Equal(t, test.ContentType, resp.Header.Get("Content-Type"))
 	}
 }
@@ -265,7 +265,7 @@ func BenchmarkGetWebhook(ben *testing.B) {
 	ts := httptest.NewServer(Webhook())
 	for i := 0; i < ben.N; i++ {
 		for _, test := range constants.GetWebhook {
-			err := getBenchReq(ts, test.Method, test.Url, nil, false)
+			err := getBenchReq(ts, test.Method, test.URL, nil, false)
 			if err != nil {
 				log.Println(err)
 			}
