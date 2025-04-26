@@ -148,6 +148,7 @@ func TestGetHtmlWebhook(t *testing.T) {
 	ts := httptest.NewServer(Webhook())
 
 	resp := getReq(t, ts, "GET", "", nil, false)
+	defer resp.Body.Close()
 
 	require.Equal(t, 200, resp.StatusCode, fmt.Sprintf("we want code like %v, but we got %v\r\n", 200, resp.StatusCode))
 
@@ -314,9 +315,9 @@ func getBenchReq(r *httptest.Server, method, path string, body *models.Metrics, 
 		req.Header.Set("Accept-Encoding", "gzip")
 	}
 
-	_, err = r.Client().Do(req)
+	resp, err := r.Client().Do(req)
 	if err != nil {
 		return err
 	}
-	return nil
+	return resp.Body.Close()
 }
