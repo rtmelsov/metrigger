@@ -2,7 +2,7 @@ package constants
 
 import "github.com/rtmelsov/metrigger/internal/models"
 
-var JsonTests = []models.JSONTest{
+var JSONTests = []models.JSONTest{
 	{
 		Name:       "1",
 		Action:     "update",

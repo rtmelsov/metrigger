@@ -99,11 +99,11 @@ func TestGzipUpdateWebhook(t *testing.T) {
 	}
 }
 
-func TestJsonUpdateWebhook(t *testing.T) {
+func TestJSONUpdateWebhook(t *testing.T) {
 	ts := httptest.NewServer(Webhook())
 	var b models.Metrics
 
-	for _, test := range constants.JsonTests {
+	for _, test := range constants.JSONTests {
 
 		if test.Value.T == "counter" {
 			b = models.Metrics{
@@ -218,12 +218,12 @@ func BenchmarkGzipUpdateWebhook(ben *testing.B) {
 	}
 }
 
-func BenchmarkJsonUpdateWebhook(ben *testing.B) {
+func BenchmarkJSONUpdateWebhook(ben *testing.B) {
 	ts := httptest.NewServer(Webhook())
 	var b models.Metrics
 
 	for i := 0; i < ben.N; i++ {
-		for _, test := range constants.JsonTests {
+		for _, test := range constants.JSONTests {
 
 			if test.Value.T == "counter" {
 				b = models.Metrics{
