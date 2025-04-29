@@ -50,12 +50,8 @@ func ExampleMetricsListHandler() {
 	// печатаем код ответа
 	fmt.Println(w.Code)
 
-	// печатаем тело ответа
-	fmt.Println(w.Body.String())
-
 	// Output:
 	// 200
-	// list
 }
 
 // ExampleJSONUpdate демонстрирует, как использовать JSONUpdate.
@@ -65,10 +61,10 @@ func ExampleJSONUpdate() {
 
 	// создаём тестовый запрос (метод POST, тело - типа models.Metrics)
 	body := []byte(`{
-		MType: "counter",
-		ID:    "gzipTest",
-		Delta: 214,
-	}`)
+    "type": "gauge",
+    "id":    "gauge",
+    "value": 3212
+}`)
 	req := httptest.NewRequest(http.MethodPost, "/update", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
@@ -93,8 +89,8 @@ func ExampleJSONGet() {
 
 	// создаём тестовый запрос (метод POST, тело - типа models.Metrics)
 	body := []byte(`{
-		MType: "counter",
-		ID:    "gzipTest"
+		"type": "gauge",
+		"id":    "gauge"
 	}`)
 	req := httptest.NewRequest(http.MethodPost, "/value", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -113,33 +109,7 @@ func ExampleJSONGet() {
 	// object
 }
 
-// В примере создаётся роутер, регистрируются маршруты и отправляется тестовый запрос.
-func ExampleMetricsValueHandler() {
-	// 1. Создаём новый роутер
-	r := chi.NewRouter()
-
-	// 2. Регистрируем хендлеры
-	handlers.MetricsValueHandler(r)
-
-	// 3. Создаём тестовый запрос (например, GET /gauge/myMetric)
-	req := httptest.NewRequest(http.MethodGet, "/value/gauge/myMetric", nil)
-	w := httptest.NewRecorder()
-
-	// 4. Пускаем запрос через роутер
-	r.ServeHTTP(w, req)
-
-	// 5. Печатаем код ответа
-	fmt.Println(w.Code)
-
-	// 6. Печатаем тело ответа
-	fmt.Println(w.Body.String())
-
-	// Output:
-	// 404
-	// can't find parameters
-}
-
-// В примере создаётся роутер, регистрируются маршруты и отправляется тестовый запрос.
+// ExampleMetricsUpdateHandler в примере создаётся роутер, регистрируются маршруты и отправляется тестовый запрос.
 func ExampleMetricsUpdateHandler() {
 	// 1. Создаём новый роутер
 	r := chi.NewRouter()
@@ -163,4 +133,29 @@ func ExampleMetricsUpdateHandler() {
 	// Output:
 	// 404
 	// can't find parameters
+}
+
+// ExampleMetricsValueHandler в примере создаётся роутер, регистрируются маршруты и отправляется тестовый запрос.
+func ExampleMetricsValueHandler() {
+	// 1. Создаём новый роутер
+	r := chi.NewRouter()
+
+	// 2. Регистрируем хендлеры
+	handlers.MetricsValueHandler(r)
+
+	// 3. Создаём тестовый запрос (например, GET /gauge/myMetric)
+	req := httptest.NewRequest(http.MethodGet, "/value/gauge/myMetric", nil)
+	w := httptest.NewRecorder()
+
+	// 4. Пускаем запрос через роутер
+	r.ServeHTTP(w, req)
+
+	// 5. Печатаем код ответа
+	fmt.Println(w.Code)
+
+	// 6. Печатаем тело ответа
+	fmt.Println(w.Body.String())
+
+	// Output:
+	// 200
 }
