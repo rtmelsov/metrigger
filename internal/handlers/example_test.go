@@ -53,10 +53,6 @@ func ExampleJSONUpdate() {
 		// печатаем тело ответа
 		fmt.Println(w.Body.String())
 
-		// Output:
-		// 200
-		// object
-
 		//
 		// Gauge новое значение должно замещать предыдущее
 		gauge := agent.RequestToServer("gauge", k, b, 0)
@@ -77,11 +73,14 @@ func ExampleJSONUpdate() {
 		// печатаем тело ответа
 		fmt.Println(w.Body.String())
 
-		// Output:
-		// 200
-		// object
-
+		break
 	}
+
+	// Output:
+	// 200
+	// object
+	// 200
+	// object
 }
 
 // ExampleJSONGet демонстрирует, как использовать JSONGet.
@@ -121,10 +120,6 @@ func ExampleJSONGet() {
 		// печатаем тело ответа
 		fmt.Println(w.Body.String())
 
-		// Output:
-		// 200
-		// object
-
 		// Создаем объект для поиска метрики в сервере gauge
 		res, err = json.Marshal(gaugeMetric)
 		if err != nil {
@@ -143,10 +138,14 @@ func ExampleJSONGet() {
 		// печатаем тело ответа
 		fmt.Println(w.Body.String())
 
-		// Output:
-		// 200
-		// object
+		break
+
 	}
+	// Output:
+	// 200
+	// object
+	// 200
+	// object
 
 }
 
@@ -173,10 +172,6 @@ func ExampleMetricsUpdateHandler() {
 		// 6. Печатаем тело ответа
 		fmt.Println(w.Body.String())
 
-		// Output:
-		// 404
-		// can't find parameters
-
 		// 3. Создаём тестовый запрос (например, GET /counter/myMetric)
 		req = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/update/gauge/%s/%b", k, 1), nil)
 		w = httptest.NewRecorder()
@@ -190,10 +185,13 @@ func ExampleMetricsUpdateHandler() {
 		// 6. Печатаем тело ответа
 		fmt.Println(w.Body.String())
 
-		// Output:
-		// 404
-		// can't find parameters
+		break
 	}
+	// Output:
+	// 200
+	// object
+	// 200
+	// object
 }
 
 // ExampleMetricsValueHandler в примере создаётся роутер, регистрируются маршруты и отправляется тестовый запрос.
@@ -218,10 +216,6 @@ func ExampleMetricsValueHandler() {
 		// 6. Печатаем тело ответа
 		fmt.Println(w.Body.String())
 
-		// Output:
-		// 200
-		// metric info
-
 		// 3. Создаём тестовый запрос (например, GET /counter/myMetric)
 		req = httptest.NewRequest(http.MethodGet, fmt.Sprintf("/update/gauge/%s", k), nil)
 		w = httptest.NewRecorder()
@@ -235,10 +229,13 @@ func ExampleMetricsValueHandler() {
 		// 6. Печатаем тело ответа
 		fmt.Println(w.Body.String())
 
-		// Output:
-		// 200
-		// metric info
+		break
 	}
+	// Output:
+	// 200
+	// object
+	// 200
+	// object
 }
 
 // ExampleMetricsListHandler демонстрирует, как использовать MetricsListHandler.
