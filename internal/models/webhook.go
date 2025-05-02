@@ -47,3 +47,8 @@ type LocalStorage struct {
 
 // MetricsCollector тип записи списка в файл
 type MetricsCollector map[string]float64
+
+type MetricsCollectorData struct {
+	Metrics *MetricsCollector
+	Length  int
+}

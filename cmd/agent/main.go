@@ -9,19 +9,18 @@ import (
 )
 
 func main() {
-	config.AgentParseFlag()
-	logger := config.GetAgentStorage().GetLogger()
+	logger := config.GetAgentConfig().GetLogger()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	// Проверка доступности сервера
-	err := agent.WaitForServer(ctx, config.AgentFlags.Addr)
+	err := agent.WaitForServer(ctx, config.GetAgentConfig().Address())
 	if err != nil {
 		logger.Error("Server not available", zap.String("error", err.Error()))
 		return
 	}
 
-	prettyJSON, err := json.MarshalIndent(config.AgentFlags, "", "  ")
+	prettyJSON, err := json.MarshalIndent(config.GetAgentConfig().Address(), "", "  ")
 	if err != nil {
 		logger.Error("Error while try to marshal agent flags", zap.String("error", err.Error()))
 		return
@@ -29,5 +28,4 @@ func main() {
 	logger.Info("started", zap.String("agent flags", string(prettyJSON)))
 
 	agent.Run()
-
 }
