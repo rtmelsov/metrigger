@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/rtmelsov/metrigger/cmd/staticlint"
 	"github.com/rtmelsov/metrigger/internal/config"
 	"github.com/rtmelsov/metrigger/internal/db"
 	"github.com/rtmelsov/metrigger/internal/handlers"
@@ -14,6 +15,7 @@ import (
 )
 
 func main() {
+	staticlint.Check()
 	config.ServerParseFlag()
 
 	logger := storage.GetMemStorage().GetLogger()
@@ -57,8 +59,8 @@ func main() {
 	err := run()
 	if err != nil {
 		logger.Panic("error while running services", zap.String("error", err.Error()))
-		return
 	}
+
 }
 func run() error {
 	return http.ListenAndServe(storage.ServerFlags.Addr, handlers.Webhook())
