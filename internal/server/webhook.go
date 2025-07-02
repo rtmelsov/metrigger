@@ -1,13 +1,13 @@
 package server
 
 import (
-	"fmt"
 	"github.com/rtmelsov/metrigger/internal/storage"
+	"go.uber.org/zap"
 	"strconv"
 )
 
 func MetricsGaugeSet(name string, val string) error {
-	mem := storage.GetMem()
+	mem := storage.GetMemStorage()
 	met := storage.NewGaugeMetric()
 	met.Type = "gauge"
 	f, err := strconv.ParseFloat(val, 64)
@@ -19,25 +19,20 @@ func MetricsGaugeSet(name string, val string) error {
 	return nil
 }
 
-func MetricsCounterGet(name string) (*storage.CounterMetric, error) {
-	mem := storage.GetMem()
+func MetricsCounterGet(name string) (*storage.CounterMetric, *storage.GaugeMetric, error) {
+	mem := storage.GetMemStorage()
 	oldMet, err := mem.GetCounterMetric(name)
-	return oldMet, err
+	return oldMet, nil, err
 }
 
-func MetricsGaugeGet(name string) (*storage.GaugeMetric, error) {
-	mem := storage.GetMem()
+func MetricsGaugeGet(name string) (*storage.CounterMetric, *storage.GaugeMetric, error) {
+	mem := storage.GetMemStorage()
 	oldMet, err := mem.GetGaugeMetric(name)
-	return oldMet, err
-}
-
-func MetricsGet() *storage.MemStorage {
-	metrics := storage.GetMem()
-	return metrics
+	return nil, oldMet, err
 }
 
 func MetricsCounterSet(name string, val string) error {
-	mem := storage.GetMem()
+	mem := storage.GetMemStorage()
 	met := storage.NewCounterMetric()
 	met.Type = "counter"
 	i, err := strconv.Atoi(val)
@@ -48,7 +43,8 @@ func MetricsCounterSet(name string, val string) error {
 	oldCount := 0
 	oldMet, err := mem.GetCounterMetric(name)
 	if err != nil {
-		fmt.Printf("Error: %v\r\n", err.Error())
+		logger := storage.GetMemStorage().GetLogger()
+		logger.Error("Error: %v\r\n", zap.String("error", err.Error()))
 	} else {
 		oldCount = oldMet.Value
 	}
