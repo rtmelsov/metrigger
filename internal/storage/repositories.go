@@ -15,15 +15,15 @@ type GaugeMetric struct {
 }
 
 type MemStorage struct {
-	counter map[string]CounterMetric
-	gauge   map[string]GaugeMetric
+	Counter map[string]CounterMetric
+	Gauge   map[string]GaugeMetric
 	mu      sync.Mutex
 }
 
 func newMemStorage() *MemStorage {
 	return &MemStorage{
-		counter: make(map[string]CounterMetric),
-		gauge:   make(map[string]GaugeMetric),
+		Counter: make(map[string]CounterMetric),
+		Gauge:   make(map[string]GaugeMetric),
 	}
 }
 
@@ -47,11 +47,22 @@ func NewGaugeMetric() *GaugeMetric {
 	}
 }
 
+func (m *MemStorage) GetGaugeMetric(name string) (*GaugeMetric, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	var value GaugeMetric
+	value, ok := m.Gauge[name]
+	if !ok {
+		return nil, errors.New("can't get that name's value")
+	}
+	return &value, nil
+}
+
 func (m *MemStorage) GetCounterMetric(name string) (*CounterMetric, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	var value CounterMetric
-	value, ok := m.counter[name]
+	value, ok := m.Counter[name]
 	if !ok {
 		return nil, errors.New("can't get that name's value")
 	}
@@ -61,11 +72,11 @@ func (m *MemStorage) GetCounterMetric(name string) (*CounterMetric, error) {
 func (m *MemStorage) SetCounterMetric(name string, value CounterMetric) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.counter[name] = value
+	m.Counter[name] = value
 }
 
 func (m *MemStorage) SetGaugeMetric(name string, value GaugeMetric) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.gauge[name] = value
+	m.Gauge[name] = value
 }

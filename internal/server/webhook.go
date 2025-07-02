@@ -19,6 +19,23 @@ func MetricsGaugeSet(name string, val string) error {
 	return nil
 }
 
+func MetricsCounterGet(name string) (*storage.CounterMetric, error) {
+	mem := storage.GetMem()
+	oldMet, err := mem.GetCounterMetric(name)
+	return oldMet, err
+}
+
+func MetricsGaugeGet(name string) (*storage.GaugeMetric, error) {
+	mem := storage.GetMem()
+	oldMet, err := mem.GetGaugeMetric(name)
+	return oldMet, err
+}
+
+func MetricsGet() *storage.MemStorage {
+	metrics := storage.GetMem()
+	return metrics
+}
+
 func MetricsCounterSet(name string, val string) error {
 	mem := storage.GetMem()
 	met := storage.NewCounterMetric()
