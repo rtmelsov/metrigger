@@ -10,31 +10,32 @@ import (
 	"net/http"
 )
 
-func worker(metricList []*models.Metrics) {
+// Worker функция для отправки POST запроса
+func Worker(metricList []*models.Metrics) error {
 	data, err := json.Marshal(&metricList)
-	logger := config.GetAgentStorage().GetLogger()
+	logger := config.GetAgentConfig().GetLogger()
 	if err != nil {
-		logger.Panic("Error to Marshal JSON", zap.String("error", err.Error()))
-		return
+		logger.Error("Error to Marshal JSON", zap.String("error", err.Error()))
+		return err
 	}
 
 	reqBody, err := helpers.CompressData(data)
 	if err != nil {
-		logger.Panic("Error to Marshal JSON", zap.String("error", err.Error()))
-		return
+		logger.Error("Error to Marshal JSON", zap.String("error", err.Error()))
+		return err
 	}
 
-	url := fmt.Sprintf("http://%s/updates/", config.AgentFlags.Addr)
+	url := fmt.Sprintf("http://%s/updates/", config.GetAgentConfig().Address())
 
 	req, err := http.NewRequest("POST", url, reqBody)
 
 	if err != nil {
-		logger.Panic("1 Request to services", zap.String("error", err.Error()))
-		return
+		logger.Error("1 Request to services", zap.String("error", err.Error()))
+		return err
 	}
 
-	if config.AgentFlags.JwtKey != "" {
-		hash := helpers.ComputeHMACSHA256(data, config.AgentFlags.JwtKey)
+	if config.GetAgentConfig().JwtKey() != "" {
+		hash := helpers.ComputeHMACSHA256(data, config.GetAgentConfig().JwtKey())
 		req.Header.Set("HashSHA256", hash)
 	}
 
@@ -46,22 +47,23 @@ func worker(metricList []*models.Metrics) {
 	resp, err := client.Do(req)
 
 	if err != nil {
-		logger.Panic("2 Request to services", zap.String("error", err.Error()))
-		return
+		logger.Error("2 Request to services", zap.String("error", err.Error()))
+		return err
 	}
 
 	if resp.StatusCode != 200 {
 		logger.Error("status code: ", zap.Int("code", resp.StatusCode))
 	}
 
-	if config.AgentFlags.JwtKey != "" {
+	if config.GetAgentConfig().JwtKey() != "" {
 		logger.Info("hash answer", zap.String("HashSHA256", resp.Header.Get("HashSHA256")))
 	}
 
 	err = resp.Body.Close()
 	if err != nil {
-		logger.Panic("3 Request to services", zap.String("error", err.Error()))
-		return
+		logger.Error("3 Request to services", zap.String("error", err.Error()))
+		return err
 	}
 	logger.Info("requested")
+	return nil
 }

@@ -1,13 +1,12 @@
 package handlers
 
 import (
+	"github.com/go-chi/chi/v5"
 	"github.com/rtmelsov/metrigger/internal/middleware"
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
 	"net/http"
 	"strings"
-
-	"github.com/go-chi/chi/v5"
 )
 
 func GetMetricData(r *http.Request) (string, string) {
@@ -25,6 +24,7 @@ func GetMetricData(r *http.Request) (string, string) {
 	return metname, metval
 }
 
+// Webhook функция для распределения адресов для определения методов
 func Webhook() chi.Router {
 	r := chi.NewRouter()
 	//r.Use(middleware.Logger)

@@ -2,16 +2,18 @@ package handlers
 
 import (
 	"database/sql"
-	"errors"
 	"github.com/rtmelsov/metrigger/internal/constants"
 	"github.com/rtmelsov/metrigger/internal/db"
 	"github.com/rtmelsov/metrigger/internal/models"
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
 	"net/http"
-	"strconv"
 )
 
+// PingDBHandler обрабатывает HTTP-запрос для проверки соединения с базой данных.
+//
+// При успешной проверке возвращает статус 200 OK и сообщение "ok".
+// В случае ошибки — пишет ошибку в ответ и логирует её.
 func PingDBHandler(w http.ResponseWriter, r *http.Request) {
 	mem := storage.GetMemStorage()
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
@@ -37,129 +39,52 @@ func PingDBHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// UpdateMetrics обновляет метрики в базе данных.
+//
+// Принимает список метрик `response`, обновляет их значения в транзакции и возвращает
+// актуальные значения метрик. В случае ошибки возвращает ошибку.
+//
+// Возможные ошибки:
+// - ошибка подключения к базе данных
+// - ошибка выполнения SQL-запросов
+// - ошибка при парсинге данных
 func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
-	Log := storage.GetMemStorage().GetLogger()
+	log := storage.GetMemStorage().GetLogger()
 
-	var newMetrics []models.Metrics
-	DB, err := db.GetDataBase()
-
+	tx, err := db.BeginTransaction()
 	if err != nil {
 		return nil, err
 	}
-
-	tx, err := DB.Begin()
-	defer func(tx *sql.Tx) {
-		err := tx.Rollback()
-		if err != nil {
-			Log.Error(err.Error())
-		}
-	}(tx)
-	defer func() {
-		err := tx.Rollback()
-		if err != nil {
-			Log.Error(err.Error())
-		}
-	}()
-	if err != nil {
-		return nil, err
-	}
+	defer db.RollbackTx(tx)
 
 	setGauge, setCounter, getGaugeCommand, getDeltaCommand, err := getCommands(tx)
 	if err != nil {
-		Log.Panic("error while get command", zap.Error(err))
+		log.Panic("get command error", zap.Error(err))
 		return nil, err
 	}
-	defer func(setGauge *sql.Stmt) {
-		err := setGauge.Close()
-		if err != nil {
-			Log.Error(err.Error())
-		}
-	}(setGauge)
-	defer func(setCounter *sql.Stmt) {
-		err := setCounter.Close()
-		if err != nil {
-			Log.Error(err.Error())
-		}
-	}(setCounter)
-	defer func(getGaugeCommand *sql.Stmt) {
-		err := getGaugeCommand.Close()
-		if err != nil {
-			Log.Error(err.Error())
-		}
-	}(getGaugeCommand)
-	defer func(getDeltaCommand *sql.Stmt) {
-		err := getDeltaCommand.Close()
-		if err != nil {
-			Log.Error(err.Error())
-		}
-	}(getDeltaCommand)
+	defer db.CloseStmt(setGauge)
+	defer db.CloseStmt(setCounter)
+	defer db.CloseStmt(getGaugeCommand)
+	defer db.CloseStmt(getDeltaCommand)
 
+	var newMetrics []models.Metrics
 	for _, v := range *response {
-		Log.Info("range *response", zap.String("key", v.MType), zap.String("name", v.ID), zap.Any("value", v.Value), zap.Any("delta", v.Delta))
-		switch v.MType {
-		case "gauge":
-			if v.Value == nil {
-				return nil, errors.New("value is empty")
-			}
-			_, err = setGauge.Exec(v.ID, v.MType, v.Value)
-
-		case "counter":
-			if v.Delta == nil {
-				return nil, errors.New("delta is empty")
-			}
-			_, err = setCounter.Exec(v.ID, v.MType, v.Delta)
-
-		default:
-			Log.Panic("error while exec", zap.Error(err))
+		log.Info("processing metric", zap.String("type", v.MType), zap.String("id", v.ID))
+		if err := db.InsertMetric(v, setGauge, setCounter); err != nil {
+			log.Panic("insert metric error", zap.Error(err))
 			return nil, err
 		}
 
+		updated, err := db.FetchUpdatedMetric(v, getGaugeCommand, getDeltaCommand)
 		if err != nil {
-			Log.Panic("error while exec", zap.Error(err))
+			log.Panic("fetch updated metric error", zap.Error(err))
 			return nil, err
 		}
-
-		if v.MType == "gauge" {
-			var value string
-			err = getGaugeCommand.QueryRow(v.MType, v.ID).Scan(&value)
-			if err != nil {
-				Log.Panic("error while query row", zap.Error(err))
-				return nil, err
-			}
-			f, err := strconv.ParseFloat(value, 64)
-			if err != nil {
-				Log.Panic("error while query row", zap.Error(err))
-				return nil, err
-			}
-			newMetrics = append(newMetrics, models.Metrics{
-				ID:    v.ID,
-				MType: v.MType,
-				Value: &f,
-			})
-		} else {
-			var delta string
-			err = getDeltaCommand.QueryRow(v.MType, v.ID).Scan(&delta)
-			if err != nil {
-				Log.Panic("error while query row", zap.Error(err))
-				return nil, err
-			}
-			d, err := strconv.ParseInt(delta, 10, 64)
-			if err != nil {
-				Log.Panic("error while parsing", zap.Error(err))
-				return nil, err
-			}
-			newMetrics = append(newMetrics, models.Metrics{
-				ID:    v.ID,
-				MType: v.MType,
-				Delta: &d,
-			})
-		}
-
+		newMetrics = append(newMetrics, updated)
 	}
 
-	err = tx.Commit()
-	if err != nil {
-		Log.Panic("error while commit", zap.Error(err))
+	if err := tx.Commit(); err != nil {
+		log.Panic("commit error", zap.Error(err))
 		return nil, err
 	}
 	return &newMetrics, nil
