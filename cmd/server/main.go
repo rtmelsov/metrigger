@@ -7,7 +7,9 @@ import (
 	"github.com/rtmelsov/metrigger/internal/handlers"
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
+	"log"
 	"net/http"
+	"net/http/pprof"
 	"time"
 )
 
@@ -33,6 +35,22 @@ func main() {
 		err := logger.Sync()
 		if err != nil {
 			logger.Error(err.Error())
+		}
+	}(logger)
+
+	go func(logger *zap.Logger) {
+		pprofMux := http.NewServeMux()
+		pprofMux.HandleFunc("/debug/pprof/", pprof.Index)
+		pprofMux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+		pprofMux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		pprofMux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+		pprofMux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+
+		logger.Info("start pprof on 6060")
+
+		err := http.ListenAndServe("localhost:6060", pprofMux)
+		if err != nil {
+			log.Fatal(err)
 		}
 	}(logger)
 
