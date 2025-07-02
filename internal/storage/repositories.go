@@ -26,18 +26,6 @@ var (
 	ServerFlags   models.ServerFlagsType
 )
 
-type ReadMetricsStorage interface {
-	GetGaugeMetric(name string) (*models.GaugeMetric, error)
-	GetCounterMetric(name string) (*models.CounterMetric, error)
-	GetLogger() *zap.Logger
-}
-
-type SetMetricStorage interface {
-	SetGaugeMetric(name string, value models.GaugeMetric)
-	SetCounterMetric(name string, value models.CounterMetric)
-	SetDataToFile(value models.CounterMetric) error
-}
-
 func (m *MemStorage) GetLogger() *zap.Logger {
 	return m.Logger
 }

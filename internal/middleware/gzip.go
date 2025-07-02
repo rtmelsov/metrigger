@@ -104,7 +104,7 @@ func GzipParser(h http.Handler) http.Handler {
 			defer cr.Close()
 		}
 
-		// передаём управление хендлеру
+		// передаём управление хендлеры
 		h.ServeHTTP(ow, r)
 	})
 }

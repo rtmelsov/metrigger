@@ -48,19 +48,51 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 	}
 
 	tx, err := DB.Begin()
+	defer func(tx *sql.Tx) {
+		err := tx.Rollback()
+		if err != nil {
+			Log.Error(err.Error())
+		}
+	}(tx)
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			Log.Error(err.Error())
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
 
-	setGauge, setCounter, getGaugeGommand, getDeltaGommand, err := getCommands(tx)
+	setGauge, setCounter, getGaugeCommand, getDeltaCommand, err := getCommands(tx)
 	if err != nil {
 		Log.Panic("error while get command", zap.Error(err))
 		return nil, err
 	}
-	defer setGauge.Close()
-	defer setCounter.Close()
-	defer getGaugeGommand.Close()
-	defer getDeltaGommand.Close()
+	defer func(setGauge *sql.Stmt) {
+		err := setGauge.Close()
+		if err != nil {
+			Log.Error(err.Error())
+		}
+	}(setGauge)
+	defer func(setCounter *sql.Stmt) {
+		err := setCounter.Close()
+		if err != nil {
+			Log.Error(err.Error())
+		}
+	}(setCounter)
+	defer func(getGaugeCommand *sql.Stmt) {
+		err := getGaugeCommand.Close()
+		if err != nil {
+			Log.Error(err.Error())
+		}
+	}(getGaugeCommand)
+	defer func(getDeltaCommand *sql.Stmt) {
+		err := getDeltaCommand.Close()
+		if err != nil {
+			Log.Error(err.Error())
+		}
+	}(getDeltaCommand)
 
 	for _, v := range *response {
 		Log.Info("range *response", zap.String("key", v.MType), zap.String("name", v.ID), zap.Any("value", v.Value), zap.Any("delta", v.Delta))
@@ -83,14 +115,13 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 		}
 
 		if err != nil {
-			tx.Rollback()
 			Log.Panic("error while exec", zap.Error(err))
 			return nil, err
 		}
 
 		if v.MType == "gauge" {
 			var value string
-			err = getGaugeGommand.QueryRow(v.MType, v.ID).Scan(&value)
+			err = getGaugeCommand.QueryRow(v.MType, v.ID).Scan(&value)
 			if err != nil {
 				Log.Panic("error while query row", zap.Error(err))
 				return nil, err
@@ -107,7 +138,7 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 			})
 		} else {
 			var delta string
-			err = getDeltaGommand.QueryRow(v.MType, v.ID).Scan(&delta)
+			err = getDeltaCommand.QueryRow(v.MType, v.ID).Scan(&delta)
 			if err != nil {
 				Log.Panic("error while query row", zap.Error(err))
 				return nil, err
@@ -137,25 +168,21 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 func getCommands(tx *sql.Tx) (*sql.Stmt, *sql.Stmt, *sql.Stmt, *sql.Stmt, error) {
 	setGauge, err := tx.Prepare(constants.GaugeCommand)
 	if err != nil {
-		tx.Rollback()
 		return nil, nil, nil, nil, err
 	}
 
 	setCounter, err := tx.Prepare(constants.CounterCommand)
 	if err != nil {
-		tx.Rollback()
 		return nil, nil, nil, nil, err
 	}
 
 	getGaugeCommand, err := tx.Prepare(constants.GetGaugeRowCommand)
 	if err != nil {
-		tx.Rollback()
 		return nil, nil, nil, nil, err
 	}
 
 	getCounterCommand, err := tx.Prepare(constants.GetCounterRowCommand)
 	if err != nil {
-		tx.Rollback()
 		return nil, nil, nil, nil, err
 	}
 	return setGauge, setCounter, getGaugeCommand, getCounterCommand, nil

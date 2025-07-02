@@ -13,6 +13,7 @@ type AgentFlagsType struct {
 	PollInterval   int    `env:"POLL_INTERVAL"`
 	Addr           string `env:"ADDRESS"`
 	JwtKey         string `env:"KEY"`
+	RateLimit      int    `env:"RATE_LIMIT"`
 }
 
 var (
@@ -28,6 +29,7 @@ func AgentParseFlag() {
 		flag.StringVar(&AgentFlags.Addr, "a", "localhost:8080", "host and port to run services")
 		flag.IntVar(&AgentFlags.PollInterval, "p", 2, "poll interval")
 		flag.StringVar(&AgentFlags.JwtKey, "k", "server_key", "jwt key")
+		flag.IntVar(&AgentFlags.RateLimit, "l", 5, "rate limit")
 
 		flag.Parse()
 
@@ -41,10 +43,6 @@ func AgentParseFlag() {
 
 type AgentStorage struct {
 	Logger *zap.Logger
-}
-
-type AgentActions interface {
-	GetLogger() *zap.Logger
 }
 
 func (m *AgentStorage) GetLogger() *zap.Logger {

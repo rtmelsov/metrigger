@@ -29,7 +29,12 @@ func main() {
 	prettyJSON, _ := json.MarshalIndent(storage.ServerFlags, "", "  ")
 	logger.Info("started", zap.String("services flags", string(prettyJSON)))
 
-	defer logger.Sync()
+	defer func(logger *zap.Logger) {
+		err := logger.Sync()
+		if err != nil {
+			logger.Error(err.Error())
+		}
+	}(logger)
 
 	err := run()
 	if err != nil {

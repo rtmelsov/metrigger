@@ -9,11 +9,10 @@ import (
 	"html/template"
 )
 
-func MerticsListHandler(w http.ResponseWriter, r *http.Request) {
-	storage.GetMemStorage().GetLogger().Info("request func: MerticsListHandler")
+func MetricsListHandler(w http.ResponseWriter, r *http.Request) {
+	storage.GetMemStorage().GetLogger().Info("request func: MetricsListHandler")
 	mem := storage.GetMemStorage()
 	t, err := template.New("webpage").Parse(constants.Tmpl)
-
 	if err != nil {
 		mem.GetLogger().Panic("Metric List Handler", zap.String("error", err.Error()))
 	}
