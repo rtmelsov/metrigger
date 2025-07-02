@@ -1,10 +1,14 @@
 package agent
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/config"
+	"github.com/rtmelsov/metrigger/internal/models"
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
+	"math/rand"
 	"net/http"
 	"runtime"
 	"time"
@@ -14,19 +18,25 @@ type metrics map[string]float64
 
 func Run() {
 	met := make(chan metrics)
-
+	var PollCount float64
 	logger := storage.GetMemStorage().GetLogger()
-	sugar := logger.Sugar()
+	prettyJSON, _ := json.MarshalIndent(config.AgentFlags, "", "  ")
+	logger.Info("started", zap.String("agent flags", string(prettyJSON)))
 
 	go func(m chan metrics) {
-		sugar.Infow("Address", config.AgentFlags.Addr)
-		sugar.Infow("ReportInterval", config.AgentFlags.ReportInterval)
-		sugar.Infow("PollInterval", config.AgentFlags.PollInterval)
 		for {
 			time.Sleep(time.Duration(config.AgentFlags.PollInterval) * time.Second)
 			var memStats runtime.MemStats
 			runtime.ReadMemStats(&memStats)
 			var met = metrics{}
+			src := rand.NewSource(time.Now().UnixNano())
+			r := rand.New(src)
+
+			// Генерация случайного целого числа
+			RandomValue := r.Float64() // Случайное число от 0 до 99
+			PollCount++
+			met["PollCount"] = PollCount
+			met["RandomValue"] = RandomValue
 			met["Alloc"] = float64(memStats.Alloc)
 			met["BuckHashSys"] = float64(memStats.BuckHashSys)
 			met["Frees"] = float64(memStats.Frees)
@@ -60,26 +70,59 @@ func Run() {
 	for {
 		time.Sleep(time.Duration(config.AgentFlags.ReportInterval) * time.Second)
 		for k, b := range <-met {
-			RequestToServer("counter", k, 1)
-			RequestToServer("gauge", k, b)
+			RequestToServer("counter", k, 0, 1)
+			RequestToServer("gauge", k, b, 0)
 		}
+
+		logger.Info("requested")
 	}
 }
 
-func RequestToServer(t string, key string, value float64) {
-	url := fmt.Sprintf("http://%s/update/%s/%s/%f", config.AgentFlags.Addr, t, key, value)
-	req, err := http.NewRequest("POST", url, nil)
+func RequestToServer(t string, key string, value float64, counter int64) {
+	var metric models.Metrics
 
+	if t == "counter" {
+		metric = models.Metrics{
+			MType: t,
+			ID:    key,
+			Delta: &counter,
+		}
+	} else {
+		metric = models.Metrics{
+			MType: t,
+			ID:    key,
+			Value: &value,
+		}
+	}
+	data, err := json.Marshal(metric)
 	logger := storage.GetMemStorage().GetLogger()
 	if err != nil {
-		logger.Panic("Request to server", zap.String("error", err.Error()))
+		logger.Panic("Error to Marshal SSON", zap.String("error", err.Error()))
+		return
 	}
+	requestBody := bytes.NewReader(data)
+	url := fmt.Sprintf("http://%s/update/", config.AgentFlags.Addr)
 
-	req.Header.Add("Content-Type", "text/plain")
+	req, err := http.NewRequest("POST", url, requestBody)
 
-	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		logger.Panic("Request to server", zap.String("error", err.Error()))
+		logger.Panic("1 Request to server", zap.String("error", err.Error()))
+		return
 	}
-	resp.Body.Close()
+
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+
+	if err != nil {
+		logger.Panic("2 Request to server", zap.String("error", err.Error()))
+		return
+	}
+	err = resp.Body.Close()
+	if err != nil {
+		logger.Panic("3 Request to server", zap.String("error", err.Error()))
+		return
+	}
+
 }
