@@ -6,13 +6,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rtmelsov/metrigger/internal/models"
-	"github.com/rtmelsov/metrigger/internal/server"
+	"github.com/rtmelsov/metrigger/internal/services"
 )
 
 func MetricsUpdateHandler(r chi.Router) {
 	UpdateRequests := map[string]func(string, string) error{
-		"counter": server.MetricsCounterSet,
-		"gauge":   server.MetricsGaugeSet,
+		"counter": services.MetricsCounterSet,
+		"gauge":   services.MetricsGaugeSet,
 	}
 	r.Post("/", JSONUpdate)
 	for k := range UpdateRequests {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/rtmelsov/metrigger/internal/helpers"
 	"github.com/rtmelsov/metrigger/internal/models"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -29,16 +30,16 @@ type JSONTest struct {
 	value      JSONReqType
 }
 
-var updateTests = []JSONTest{
+var jsonTests = []JSONTest{
 	{
 		name:       "1",
 		action:     "update",
 		method:     "POST",
 		expectCode: 200,
-		expectBody: `{"delta":3242, "id":"fdsafd", "type":"counter"}`,
+		expectBody: `{"delta":3242, "id":"jsonTest", "type":"counter"}`,
 		value: JSONReqType{
 			t:     "counter",
-			name:  "fdsafd",
+			name:  "jsonTest",
 			delta: 3242,
 		},
 	},
@@ -47,22 +48,22 @@ var updateTests = []JSONTest{
 		action:     "update",
 		method:     "POST",
 		expectCode: 200,
-		expectBody: `{"delta":6484, "id":"fdsafd", "type":"counter"}`,
+		expectBody: `{"delta":6484, "id":"jsonTest", "type":"counter"}`,
 		value: JSONReqType{
 			t:     "counter",
-			name:  "fdsafd",
+			name:  "jsonTest",
 			delta: 3242,
 		},
 	},
 	{
 		name:       "3",
 		action:     "update",
-		expectBody: `{"id":"fdsafd", "type":"gauge", "value":32.42}`,
+		expectBody: `{"id":"jsonTest", "type":"gauge", "value":32.42}`,
 		method:     "POST",
 		expectCode: 200,
 		value: JSONReqType{
 			t:     "gauge",
-			name:  "fdsafd",
+			name:  "jsonTest",
 			value: 32.42,
 		},
 	},
@@ -71,10 +72,10 @@ var updateTests = []JSONTest{
 		action:     "value",
 		method:     "POST",
 		expectCode: 200,
-		expectBody: `{"delta":6484, "id":"fdsafd", "type":"counter"}`,
+		expectBody: `{"delta":6484, "id":"jsonTest", "type":"counter"}`,
 		value: JSONReqType{
 			t:    "counter",
-			name: "fdsafd",
+			name: "jsonTest",
 		},
 	},
 	{
@@ -82,10 +83,10 @@ var updateTests = []JSONTest{
 		action:     "value",
 		method:     "POST",
 		expectCode: 200,
-		expectBody: `{"id":"fdsafd", "type":"gauge", "value":32.42}`,
+		expectBody: `{"id":"jsonTest", "type":"gauge", "value":32.42}`,
 		value: JSONReqType{
 			t:    "gauge",
-			name: "fdsafd",
+			name: "jsonTest",
 		},
 	},
 	{
@@ -101,24 +102,99 @@ var updateTests = []JSONTest{
 	},
 }
 
-func jsonReqCheck(t *testing.T, ts *httptest.Server, test *JSONTest, b *models.Metrics) {
-	var buf bytes.Buffer
-	err := json.NewEncoder(&buf).Encode(b)
-	assert.NoError(t, err)
+var gzipTests = []JSONTest{
+	{
+		name:       "1",
+		action:     "update",
+		method:     "POST",
+		expectCode: 200,
+		expectBody: `{"delta":3242, "id":"gzipTest", "type":"counter"}`,
+		value: JSONReqType{
+			t:     "counter",
+			name:  "gzipTest",
+			delta: 3242,
+		},
+	},
+	{
+		name:       "2",
+		action:     "update",
+		method:     "POST",
+		expectCode: 200,
+		expectBody: `{"delta":6484, "id":"gzipTest", "type":"counter"}`,
+		value: JSONReqType{
+			t:     "counter",
+			name:  "gzipTest",
+			delta: 3242,
+		},
+	},
+	{
+		name:       "3",
+		action:     "update",
+		expectBody: `{"id":"gzipTest", "type":"gauge", "value":32.42}`,
+		method:     "POST",
+		expectCode: 200,
+		value: JSONReqType{
+			t:     "gauge",
+			name:  "gzipTest",
+			value: 32.42,
+		},
+	},
+	{
+		name:       "4",
+		action:     "value",
+		method:     "POST",
+		expectCode: 200,
+		expectBody: `{"delta":6484, "id":"gzipTest", "type":"counter"}`,
+		value: JSONReqType{
+			t:    "counter",
+			name: "gzipTest",
+		},
+	},
+	{
+		name:       "5",
+		action:     "value",
+		method:     "POST",
+		expectCode: 200,
+		expectBody: `{"id":"gzipTest", "type":"gauge", "value":32.42}`,
+		value: JSONReqType{
+			t:    "gauge",
+			name: "gzipTest",
+		},
+	},
+	{
+		name:       "6",
+		action:     "value",
+		method:     "POST",
+		expectCode: 404,
+		expectBody: "",
+		value: JSONReqType{
+			t:    "gauge",
+			name: "unknown",
+		},
+	},
+}
+
+func jsonReqCheck(t *testing.T, ts *httptest.Server, test *JSONTest, b *models.Metrics, isGzip bool) {
 	url := fmt.Sprintf("/%s/", test.action)
-	resp := getReq(t, ts, test.method, url, &buf)
+	resp := getReq(t, ts, test.method, url, b, isGzip)
 
 	defer resp.Body.Close()
 
-	require.Equal(t, test.expectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", url, test.expectCode, resp.StatusCode))
-	// Read the response body
 	bodyBytes, err := io.ReadAll(resp.Body)
+	require.Equal(t, test.expectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v, body: %v\r\n", url, test.expectCode, resp.StatusCode, string(bodyBytes)))
+	// Read the response body
 	require.NoError(t, err, "Error reading response body")
 
+	var responseBody string
+	if isGzip {
+		var data *bytes.Buffer
+		data, err = helpers.DecompressData(bodyBytes)
+		assert.NoError(t, err)
+		responseBody = data.String()
+	} else {
+		responseBody = string(bodyBytes)
+	}
 	// Convert response body to string
-	responseBody := string(bodyBytes)
-
-	fmt.Println("responseBody", responseBody)
 
 	// Use require.JSONEq to compare JSON strings
 	if resp.StatusCode == http.StatusOK {
@@ -126,11 +202,11 @@ func jsonReqCheck(t *testing.T, ts *httptest.Server, test *JSONTest, b *models.M
 	}
 }
 
-func TestJsonUpdateWebhook(t *testing.T) {
+func TestGzipUpdateWebhook(t *testing.T) {
 	ts := httptest.NewServer(Webhook())
 	var b models.Metrics
 
-	for _, test := range updateTests {
+	for _, test := range gzipTests {
 
 		if test.value.t == "counter" {
 			b = models.Metrics{
@@ -145,7 +221,30 @@ func TestJsonUpdateWebhook(t *testing.T) {
 				Value: &test.value.value,
 			}
 		}
-		jsonReqCheck(t, ts, &test, &b)
+		jsonReqCheck(t, ts, &test, &b, true)
+	}
+}
+
+func TestJsonUpdateWebhook(t *testing.T) {
+	ts := httptest.NewServer(Webhook())
+	var b models.Metrics
+
+	for _, test := range jsonTests {
+
+		if test.value.t == "counter" {
+			b = models.Metrics{
+				MType: test.value.t,
+				ID:    test.value.name,
+				Delta: &test.value.delta,
+			}
+		} else {
+			b = models.Metrics{
+				MType: test.value.t,
+				ID:    test.value.name,
+				Value: &test.value.value,
+			}
+		}
+		jsonReqCheck(t, ts, &test, &b, false)
 	}
 }
 
@@ -184,7 +283,7 @@ func TestPostWebhook(t *testing.T) {
 	ts := httptest.NewServer(Webhook())
 	for _, test := range tests {
 		url := fmt.Sprintf("/update/%v/%v/%v", test.value.t, test.value.name, test.value.number)
-		resp := getReq(t, ts, test.method, url, nil)
+		resp := getReq(t, ts, test.method, url, nil, false)
 		defer resp.Body.Close()
 
 		require.Equal(t, test.expectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", url, test.expectCode, resp.StatusCode))
@@ -224,7 +323,7 @@ func TestGetWebhook(t *testing.T) {
 	}
 	ts := httptest.NewServer(Webhook())
 	for _, test := range tests {
-		resp := getReq(t, ts, test.method, test.url, nil)
+		resp := getReq(t, ts, test.method, test.url, nil, false)
 		defer resp.Body.Close()
 
 		require.Equal(t, test.expectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", test.url, test.expectCode, resp.StatusCode))
@@ -232,13 +331,28 @@ func TestGetWebhook(t *testing.T) {
 	}
 }
 
-func getReq(t *testing.T, r *httptest.Server, method, path string, body io.Reader) *http.Response {
+func getReq(t *testing.T, r *httptest.Server, method, path string, body *models.Metrics, isGzip bool) *http.Response {
 	var reqBody io.Reader
-	if body != nil {
-		reqBody = body
+	if isGzip {
+		data, err := json.Marshal(body)
+		assert.NoError(t, err)
+
+		res, err := helpers.CompressData(data)
+		assert.NoError(t, err)
+		reqBody = res
+	} else if body != nil {
+		var buf bytes.Buffer
+		err := json.NewEncoder(&buf).Encode(body)
+		assert.NoError(t, err)
+		reqBody = &buf
 	}
+
 	url := r.URL + path
 	req, err := http.NewRequest(method, url, reqBody)
+	if isGzip {
+		req.Header.Set("Content-Encoding", "gzip")
+		req.Header.Set("Accept-Encoding", "gzip")
+	}
 	require.NoError(t, err)
 
 	resp, err := r.Client().Do(req)

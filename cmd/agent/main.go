@@ -21,7 +21,7 @@ func waitForServer(address string, timeout time.Duration) error {
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
-	return fmt.Errorf("server not available at %s after %v", address, timeout)
+	return fmt.Errorf("services not available at %s after %v", address, timeout)
 }
 
 func main() {

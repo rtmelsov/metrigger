@@ -28,6 +28,7 @@ func GetMetricData(r *http.Request) (string, string) {
 func Webhook() chi.Router {
 	r := chi.NewRouter()
 	r.Use(middleware.Logger)
+	r.Use(middleware.GzipParser)
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", MerticsListHandler)
 		r.Route("/update", MetricsUpdateHandler)

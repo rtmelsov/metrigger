@@ -19,7 +19,7 @@ var (
 
 func ServerParseFlag() {
 	onceForServer.Do(func() {
-		flag.StringVar(&ServerFlags.Addr, "a", "localhost:8080", "host and port to run server")
+		flag.StringVar(&ServerFlags.Addr, "a", "localhost:8080", "host and port to run services")
 
 		flag.Parse()
 
