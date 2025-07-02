@@ -10,17 +10,17 @@ import (
 	"time"
 )
 
-func waitForServer(address string, timeout time.Duration) error {
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
+func waitForServer(address string) error {
+	var timeouts = []int{1, 3, 5}
+	for _, el := range timeouts {
 		conn, err := net.Dial("tcp", address)
 		if err == nil {
 			conn.Close()
 			return nil // Сервер доступен
 		}
-		time.Sleep(100 * time.Millisecond)
+		time.Sleep(time.Duration(el) * time.Second)
 	}
-	return fmt.Errorf("services not available at %s after %v", address, timeout)
+	return fmt.Errorf("services not available at %s after %v", address, timeouts[len(timeouts)-1])
 }
 
 func main() {
@@ -28,7 +28,7 @@ func main() {
 	logger := config.GetAgentStorage().GetLogger()
 
 	// Проверка доступности сервера
-	err := waitForServer(config.AgentFlags.Addr, 60*time.Second)
+	err := waitForServer(config.AgentFlags.Addr)
 	if err != nil {
 		logger.Error("Server not available", zap.String("error", err.Error()))
 		return
