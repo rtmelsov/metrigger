@@ -7,6 +7,8 @@ import (
 	"go.uber.org/zap"
 )
 
+//postgres://postgres@localhost:5432/dbname?sslmode=disable
+
 func ServerParseFlag() {
 	storage.OnceForServer.Do(func() {
 		flag.StringVar(&storage.ServerFlags.Addr, "a", "localhost:8080", "host and port to run services")
@@ -14,6 +16,7 @@ func ServerParseFlag() {
 		flag.StringVar(&storage.ServerFlags.FileStoragePath, "f", "file.txt", "")
 		flag.BoolVar(&storage.ServerFlags.Restore, "r", true, "")
 		flag.StringVar(&storage.ServerFlags.DataBaseDsn, "d", "", "")
+		flag.StringVar(&storage.ServerFlags.JwtKey, "k", "", "jwt key")
 
 		flag.Parse()
 

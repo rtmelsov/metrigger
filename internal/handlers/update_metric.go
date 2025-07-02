@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/storage"
-	"go.uber.org/zap"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -24,7 +23,7 @@ func MetricsUpdateHandler(r chi.Router) {
 	for k := range UpdateRequests {
 		r.Route(fmt.Sprintf("/%s", k), func(r chi.Router) {
 			r.Post("/*", func(w http.ResponseWriter, r *http.Request) {
-				storage.GetMemStorage().GetLogger().Info("update with url", zap.String("url", r.URL.String()))
+				storage.GetMemStorage().GetLogger().Info("request func: update value handler")
 				if fn, exist := UpdateRequests[k]; exist {
 					metName, metVal := GetMetricData(r)
 					if err := SetMeticsUpdate(metName, metVal, fn); err != nil {

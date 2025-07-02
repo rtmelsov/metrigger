@@ -20,6 +20,7 @@ type ServerFlagsType struct {
 	FileStoragePath string `env:"FILE_STORAGE_PATH"`
 	Restore         bool   `env:"RESTORE"`
 	DataBaseDsn     string `env:"DATABASE_DSN"`
+	JwtKey          string `env:"KEY"`
 }
 
 type CounterMetric struct {
