@@ -7,6 +7,7 @@ import (
 	"github.com/rtmelsov/metrigger/internal/config"
 	"github.com/rtmelsov/metrigger/internal/helpers"
 	"github.com/rtmelsov/metrigger/internal/models"
+	"github.com/rtmelsov/metrigger/internal/storage"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"io"
@@ -23,6 +24,31 @@ func TestMain(m *testing.M) {
 	// Run tests
 	code := m.Run()
 	os.Exit(code)
+}
+
+func TestGetPingWebhook(t *testing.T) {
+	var tests = []struct {
+		name       string
+		method     string
+		expectCode int
+	}{
+		{
+			name:       "ping",
+			method:     "GET",
+			expectCode: 200,
+		},
+	}
+	if storage.ServerFlags.DataBaseDsn != "" {
+		ts := httptest.NewServer(Webhook())
+		for _, test := range tests {
+			url := "/ping"
+			resp := getReq(t, ts, test.method, url, nil, false)
+			defer resp.Body.Close()
+
+			require.Equal(t, test.expectCode, resp.StatusCode, fmt.Sprintf("url is %v, we want code like %v, but we got %v\r\n", url, test.expectCode, resp.StatusCode))
+		}
+	}
+
 }
 
 type JSONReqType struct {
@@ -360,11 +386,11 @@ func getReq(t *testing.T, r *httptest.Server, method, path string, body *models.
 
 	url := r.URL + path
 	req, err := http.NewRequest(method, url, reqBody)
+	require.NoError(t, err)
 	if isGzip {
 		req.Header.Set("Content-Encoding", "gzip")
 		req.Header.Set("Accept-Encoding", "gzip")
 	}
-	require.NoError(t, err)
 
 	resp, err := r.Client().Do(req)
 	require.NoError(t, err)
