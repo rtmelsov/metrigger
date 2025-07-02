@@ -19,7 +19,6 @@ func MetricsValueHandler(r chi.Router) {
 		r.Route(fmt.Sprintf("/%s", k), func(r chi.Router) {
 			r.Get("/*", func(w http.ResponseWriter, r *http.Request) {
 				if fn, exist := ValueRequests[k]; exist {
-
 					metName, extra := GetMetricData(r)
 					counter, gauge, err := GetMetricsValue(metName, extra, fn)
 					if err != nil {
@@ -27,7 +26,6 @@ func MetricsValueHandler(r chi.Router) {
 						return
 					}
 					w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-
 					switch k {
 					case "counter":
 						w.WriteHeader(http.StatusOK)

@@ -39,6 +39,8 @@ func (m *MemStorage) WriteAllData(n int) error {
 		return SetDataToFile(m)
 	}
 	go func() {
+		m.Mu.Lock()
+		defer m.Mu.Unlock()
 		_ = SetDataToFile(m)
 	}()
 	return nil

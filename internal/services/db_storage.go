@@ -8,19 +8,22 @@ import (
 )
 
 func GetDBCounter(name string) (*models.CounterMetric, error) {
-	res, err := db.GetMetric("counter", name)
+	d, err := db.GetMetric("counter", name)
 	if err != nil {
 		return nil, err
 	}
-	num, err := strconv.Atoi(res)
-	if err != nil {
-		fmt.Println("Error converting string to int:", err)
-		return nil, err
+	var delta int64
+	if d != "" {
+		delta, err = strconv.ParseInt(d, 10, 64)
+		if err != nil {
+			fmt.Println("Error converting string to int:", err)
+			return nil, err
+		}
 	}
 
 	return &models.CounterMetric{
 		Type:  name,
-		Value: num,
+		Value: delta,
 	}, nil
 }
 

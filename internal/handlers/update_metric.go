@@ -2,12 +2,18 @@ package handlers
 
 import (
 	"fmt"
+	"github.com/rtmelsov/metrigger/internal/storage"
+	"go.uber.org/zap"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/rtmelsov/metrigger/internal/models"
 	"github.com/rtmelsov/metrigger/internal/services"
 )
+
+func MetricsUpdateListHandler(r chi.Router) {
+	r.Post("/", JSONUpdateList)
+}
 
 func MetricsUpdateHandler(r chi.Router) {
 	UpdateRequests := map[string]func(string, string) error{
@@ -18,6 +24,7 @@ func MetricsUpdateHandler(r chi.Router) {
 	for k := range UpdateRequests {
 		r.Route(fmt.Sprintf("/%s", k), func(r chi.Router) {
 			r.Post("/*", func(w http.ResponseWriter, r *http.Request) {
+				storage.GetMemStorage().GetLogger().Info("update with url", zap.String("url", r.URL.String()))
 				if fn, exist := UpdateRequests[k]; exist {
 					metName, metVal := GetMetricData(r)
 					if err := SetMeticsUpdate(metName, metVal, fn); err != nil {
