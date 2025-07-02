@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/agent"
 	"github.com/rtmelsov/metrigger/internal/config"
-	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
 	"net"
 	"time"
@@ -26,7 +25,7 @@ func waitForServer(address string, timeout time.Duration) error {
 
 func main() {
 	config.AgentParseFlag()
-	logger := storage.GetMemStorage().GetLogger()
+	logger := config.GetAgentStorage().GetLogger()
 
 	// Проверка доступности сервера
 	err := waitForServer(config.AgentFlags.Addr, 60*time.Second)

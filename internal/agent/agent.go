@@ -6,7 +6,6 @@ import (
 	"github.com/rtmelsov/metrigger/internal/config"
 	"github.com/rtmelsov/metrigger/internal/helpers"
 	"github.com/rtmelsov/metrigger/internal/models"
-	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
 	"math/rand"
 	"net/http"
@@ -19,7 +18,7 @@ type metrics map[string]float64
 func Run() {
 	met := make(chan metrics)
 	var PollCount float64
-	logger := storage.GetMemStorage().GetLogger()
+	logger := config.GetAgentStorage().GetLogger()
 	prettyJSON, _ := json.MarshalIndent(config.AgentFlags, "", "  ")
 	logger.Info("started", zap.String("agent flags", string(prettyJSON)))
 
@@ -95,7 +94,7 @@ func RequestToServer(t string, key string, value float64, counter int64) {
 		}
 	}
 	data, err := json.Marshal(metric)
-	logger := storage.GetMemStorage().GetLogger()
+	logger := config.GetAgentStorage().GetLogger()
 	if err != nil {
 		logger.Panic("Error to Marshal SSON", zap.String("error", err.Error()))
 		return

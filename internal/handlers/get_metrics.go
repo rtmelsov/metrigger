@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/models"
-	"github.com/rtmelsov/metrigger/internal/storage"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -11,7 +10,7 @@ import (
 )
 
 func MetricsValueHandler(r chi.Router) {
-	ValueRequests := map[string]func(name string) (*storage.CounterMetric, *storage.GaugeMetric, error){
+	ValueRequests := map[string]func(name string) (*models.CounterMetric, *models.GaugeMetric, error){
 		"counter": services.MetricsCounterGet,
 		"gauge":   services.MetricsGaugeGet,
 	}
@@ -56,8 +55,8 @@ func MetricsValueHandler(r chi.Router) {
 
 func GetMetricsValue(
 	metName, extra string,
-	fn func(name string) (*storage.CounterMetric, *storage.GaugeMetric, error),
-) (*storage.CounterMetric, *storage.GaugeMetric, *models.ErrorType) {
+	fn func(name string) (*models.CounterMetric, *models.GaugeMetric, error),
+) (*models.CounterMetric, *models.GaugeMetric, *models.ErrorType) {
 	if extra != "" {
 		return nil, nil, &models.ErrorType{
 			Text: "can't find parameters", StatusCode: http.StatusNotFound,

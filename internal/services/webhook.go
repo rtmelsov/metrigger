@@ -1,10 +1,23 @@
 package services
 
 import (
+	"github.com/rtmelsov/metrigger/internal/models"
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
 	"strconv"
 )
+
+func MetricsCounterGet(name string) (*models.CounterMetric, *models.GaugeMetric, error) {
+	mem := storage.GetMemStorage()
+	oldMet, err := mem.GetCounterMetric(name)
+	return oldMet, nil, err
+}
+
+func MetricsGaugeGet(name string) (*models.CounterMetric, *models.GaugeMetric, error) {
+	mem := storage.GetMemStorage()
+	oldMet, err := mem.GetGaugeMetric(name)
+	return nil, oldMet, err
+}
 
 func MetricsGaugeSet(name string, val string) error {
 	mem := storage.GetMemStorage()
@@ -17,18 +30,6 @@ func MetricsGaugeSet(name string, val string) error {
 	met.Value = f
 	mem.SetGaugeMetric(name, *met)
 	return nil
-}
-
-func MetricsCounterGet(name string) (*storage.CounterMetric, *storage.GaugeMetric, error) {
-	mem := storage.GetMemStorage()
-	oldMet, err := mem.GetCounterMetric(name)
-	return oldMet, nil, err
-}
-
-func MetricsGaugeGet(name string) (*storage.CounterMetric, *storage.GaugeMetric, error) {
-	mem := storage.GetMemStorage()
-	oldMet, err := mem.GetGaugeMetric(name)
-	return nil, oldMet, err
 }
 
 func MetricsCounterSet(name string, val string) error {
