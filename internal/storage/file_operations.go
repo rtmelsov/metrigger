@@ -2,12 +2,17 @@ package storage
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/rtmelsov/metrigger/internal/helpers"
 	"github.com/rtmelsov/metrigger/internal/models"
 	"os"
 )
 
 func SetDataToFile(m *MemStorage) error {
+	if ServerFlags.FileStoragePath == "" {
+		return errors.New("file storage path is not exist")
+	}
+
 	data := map[string]interface{}{
 		"GaugeMetric":   m.Gauge,
 		"CounterMetric": m.Counter,
@@ -45,7 +50,6 @@ func getDataFromFile() (*models.LocalStorage, error) {
 	}
 	file, err := os.Open(ServerFlags.FileStoragePath)
 	if err != nil {
-
 		if os.IsNotExist(err) {
 			return helpers.EmptyLocalStorage(ServerFlags.FileStoragePath)
 		}

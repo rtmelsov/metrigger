@@ -8,7 +8,6 @@ import (
 
 	"github.com/rtmelsov/metrigger/internal/models"
 	"github.com/rtmelsov/metrigger/internal/services"
-	"github.com/rtmelsov/metrigger/internal/storage"
 )
 
 func JSONGet(w http.ResponseWriter, r *http.Request) {
@@ -92,9 +91,8 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var metric interface{}
-	mem := storage.GetMemStorage()
 	if resp.MType == "counter" {
-		obj, err := mem.GetCounterMetric(resp.ID)
+		obj, _, err := services.MetricsCounterGet(resp.ID)
 		if err != nil {
 			http.Error(w, "Failed to find element", http.StatusInternalServerError)
 			return
@@ -103,7 +101,7 @@ func JSONUpdate(w http.ResponseWriter, r *http.Request) {
 		resp.Delta = &num
 		metric = resp
 	} else {
-		obj, err := mem.GetGaugeMetric(resp.ID)
+		_, obj, err := services.MetricsGaugeGet(resp.ID)
 		if err != nil {
 			http.Error(w, "Failed to find element", http.StatusInternalServerError)
 			return

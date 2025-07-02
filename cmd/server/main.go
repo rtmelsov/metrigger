@@ -20,6 +20,8 @@ func main() {
 		if err != nil {
 			logger.Panic("error while running services", zap.String("error", err.Error()))
 			return
+		} else {
+			logger.Info("database is connected")
 		}
 	}
 
