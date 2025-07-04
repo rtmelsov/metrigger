@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"github.com/rtmelsov/metrigger/cmd/staticlint"
 	"github.com/rtmelsov/metrigger/internal/agent"
 	"github.com/rtmelsov/metrigger/internal/config"
 	"go.uber.org/zap"
 )
 
 func main() {
+	staticlint.Check()
+
 	logger := config.GetAgentConfig().GetLogger()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
