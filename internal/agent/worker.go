@@ -1,6 +1,7 @@
 package agent
 
 import (
+	"crypto/rsa"
 	"encoding/json"
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/config"
@@ -11,12 +12,24 @@ import (
 )
 
 // Worker функция для отправки POST запроса
-func Worker(metricList []*models.Metrics) error {
-	data, err := json.Marshal(&metricList)
+func Worker(metricList []*models.Metrics, pkey *rsa.PublicKey) error {
+
+	// get logger method
 	logger := config.GetAgentConfig().GetLogger()
+
+	data, err := json.Marshal(&metricList)
 	if err != nil {
 		logger.Error("Error to Marshal JSON", zap.String("error", err.Error()))
 		return err
+	}
+
+	// - returned crypto key for agent (public key)
+	if config.GetAgentConfig().GetCryptoKey() != "" {
+		data, err = helpers.EncryptForServer(pkey, data)
+		if err != nil {
+			logger.Error("Error to encrypt message for server with public key", zap.String("error", err.Error()))
+			return err
+		}
 	}
 
 	reqBody, err := helpers.CompressData(data)
@@ -39,6 +52,7 @@ func Worker(metricList []*models.Metrics) error {
 		req.Header.Set("HashSHA256", hash)
 	}
 
+	req.Header.Set("X-Encrypted", "true") // Явно указываешь
 	req.Header.Set("Content-Encoding", "gzip")
 	req.Header.Set("Accept-Encoding", "gzip")
 	req.Header.Set("Content-Type", "application/json")

@@ -8,6 +8,7 @@ type AgentFlags struct {
 	Addr           string `env:"ADDRESS"`
 	JwtKey         string `env:"KEY"`
 	RateLimit      int    `env:"RATE_LIMIT"`
+	CryptoRate     string `env:"CRYPTO_KEY"`
 }
 
 type AgentConfig struct {
@@ -29,6 +30,10 @@ func (cfg *AgentConfig) Address() string {
 
 func (cfg *AgentConfig) JwtKey() string {
 	return cfg.Flags.JwtKey
+}
+
+func (cfg *AgentConfig) GetCryptoKey() string {
+	return cfg.Flags.CryptoRate
 }
 
 func (cfg *AgentConfig) RateLimit() int {

@@ -19,6 +19,7 @@ var (
 func GetAgentConfig() interfaces.AgentActionsI {
 	once.Do(func() {
 		flags := models.AgentFlags{
+			CryptoRate:     "public.pem",
 			ReportInterval: 10,
 			PollInterval:   2,
 			Addr:           "localhost:8080",
@@ -27,6 +28,7 @@ func GetAgentConfig() interfaces.AgentActionsI {
 		}
 
 		// CLI flags
+		flag.StringVar(&flags.CryptoRate, "crypto-key", flags.CryptoRate, "")
 		flag.IntVar(&flags.ReportInterval, "r", flags.ReportInterval, "report interval")
 		flag.StringVar(&flags.Addr, "a", flags.Addr, "host and port")
 		flag.IntVar(&flags.PollInterval, "p", flags.PollInterval, "poll interval")

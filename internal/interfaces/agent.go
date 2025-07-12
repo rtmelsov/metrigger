@@ -9,5 +9,6 @@ type AgentActionsI interface {
 	PollInterval() int
 	Address() string
 	JwtKey() string
+	GetCryptoKey() string
 	RateLimit() int
 }
