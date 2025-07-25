@@ -38,7 +38,9 @@ func TestMain(m *testing.M) {
 
 func TestGetPingWebhook(t *testing.T) {
 	if storage.ServerFlags.DataBaseDsn != "" {
-		ts := httptest.NewServer(Webhook())
+		r, err := Webhook()
+		require.NoError(t, err, "Error to get routers")
+		ts := httptest.NewServer(r)
 		for _, test := range constants.GetPingWebhook {
 			url := "/ping"
 			resp := getReq(t, ts, test.Method, url, nil, false)
@@ -77,7 +79,9 @@ func jsonReqCheck(t *testing.T, ts *httptest.Server, test *models.JSONTest, b *m
 }
 
 func TestGzipUpdateWebhook(t *testing.T) {
-	ts := httptest.NewServer(Webhook())
+	r, err := Webhook()
+	require.NoError(t, err, "Error to get routers")
+	ts := httptest.NewServer(r)
 	var b models.Metrics
 
 	for _, test := range constants.GzipTests {
@@ -100,7 +104,10 @@ func TestGzipUpdateWebhook(t *testing.T) {
 }
 
 func TestJSONUpdateWebhook(t *testing.T) {
-	ts := httptest.NewServer(Webhook())
+	r, err := Webhook()
+	require.NoError(t, err, "Error to get routers")
+
+	ts := httptest.NewServer(r)
 	var b models.Metrics
 
 	for _, test := range constants.JSONTests {
@@ -123,7 +130,11 @@ func TestJSONUpdateWebhook(t *testing.T) {
 }
 
 func TestPostWebhook(t *testing.T) {
-	ts := httptest.NewServer(Webhook())
+	r, err := Webhook()
+	require.NoError(t, err, "Error to get routers")
+
+	ts := httptest.NewServer(r)
+
 	for _, test := range constants.PostWebhook {
 		url := fmt.Sprintf("/update/%v/%v/%v", test.Value.T, test.Value.Name, test.Value.Number)
 		resp := getReq(t, ts, test.Method, url, nil, false)
@@ -134,7 +145,10 @@ func TestPostWebhook(t *testing.T) {
 }
 
 func TestGetWebhook(t *testing.T) {
-	ts := httptest.NewServer(Webhook())
+	r, err := Webhook()
+	require.NoError(t, err, "Error to get routers")
+
+	ts := httptest.NewServer(r)
 	for _, test := range constants.GetWebhook {
 		resp := getReq(t, ts, test.Method, test.URL, nil, false)
 		defer resp.Body.Close()
@@ -145,7 +159,10 @@ func TestGetWebhook(t *testing.T) {
 }
 
 func TestGetHtmlWebhook(t *testing.T) {
-	ts := httptest.NewServer(Webhook())
+	r, err := Webhook()
+	require.NoError(t, err, "Error to get routers")
+
+	ts := httptest.NewServer(r)
 
 	resp := getReq(t, ts, "GET", "", nil, false)
 	defer resp.Body.Close()
@@ -191,7 +208,10 @@ func jsonBenchReqCheck(ts *httptest.Server, test *models.JSONTest, b *models.Met
 }
 
 func BenchmarkGzipUpdateWebhook(ben *testing.B) {
-	ts := httptest.NewServer(Webhook())
+	r, err := Webhook()
+	require.NoError(ben, err, "Error to get routers")
+
+	ts := httptest.NewServer(r)
 	var b models.Metrics
 
 	for i := 0; i < ben.N; i++ {
@@ -219,7 +239,10 @@ func BenchmarkGzipUpdateWebhook(ben *testing.B) {
 }
 
 func BenchmarkJSONUpdateWebhook(ben *testing.B) {
-	ts := httptest.NewServer(Webhook())
+	r, err := Webhook()
+	require.NoError(ben, err, "Error to get routers")
+
+	ts := httptest.NewServer(r)
 	var b models.Metrics
 
 	for i := 0; i < ben.N; i++ {
@@ -248,7 +271,10 @@ func BenchmarkJSONUpdateWebhook(ben *testing.B) {
 }
 
 func BenchmarkPostWebhook(ben *testing.B) {
-	ts := httptest.NewServer(Webhook())
+	r, err := Webhook()
+	require.NoError(ben, err, "Error to get routers")
+
+	ts := httptest.NewServer(r)
 	for i := 0; i < ben.N; i++ {
 		for _, test := range constants.PostWebhook {
 			url := fmt.Sprintf("/update/%v/%v/%v", test.Value.T, test.Value.Name, test.Value.Number)
@@ -262,7 +288,10 @@ func BenchmarkPostWebhook(ben *testing.B) {
 }
 
 func BenchmarkGetWebhook(ben *testing.B) {
-	ts := httptest.NewServer(Webhook())
+	r, err := Webhook()
+	require.NoError(ben, err, "Error to get routers")
+
+	ts := httptest.NewServer(r)
 	for i := 0; i < ben.N; i++ {
 		for _, test := range constants.GetWebhook {
 			err := getBenchReq(ts, test.Method, test.URL, nil, false)
@@ -274,7 +303,10 @@ func BenchmarkGetWebhook(ben *testing.B) {
 }
 
 func BenchmarkGetHtmlWebhook(ben *testing.B) {
-	ts := httptest.NewServer(Webhook())
+	r, err := Webhook()
+	require.NoError(ben, err, "Error to get routers")
+
+	ts := httptest.NewServer(r)
 	for i := 0; i < ben.N; i++ {
 		err := getBenchReq(ts, "GET", "", nil, false)
 		if err != nil {
