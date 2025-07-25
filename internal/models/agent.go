@@ -1,10 +1,12 @@
 package models
 
-import "go.uber.org/zap"
+import (
+	"go.uber.org/zap"
+)
 
 type AgentFlags struct {
 	ConfigFile     string `env:"CONFIG"`
-	ConfigCFile    string 
+	ConfigCFile    string
 	ReportInterval int    `env:"REPORT_INTERVAL"`
 	PollInterval   int    `env:"POLL_INTERVAL"`
 	Addr           string `env:"ADDRESS"`

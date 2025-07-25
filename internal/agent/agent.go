@@ -3,10 +3,10 @@ package agent
 import (
 	"context"
 	"crypto/rsa"
-	"encoding/json"
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/config"
 	"github.com/rtmelsov/metrigger/internal/helpers"
+	"github.com/rtmelsov/metrigger/internal/interfaces"
 	"github.com/rtmelsov/metrigger/internal/metrics"
 	"github.com/rtmelsov/metrigger/internal/models"
 	"go.uber.org/zap"
@@ -16,12 +16,31 @@ import (
 	"time"
 )
 
-var (
-	err  error
-	pkey *rsa.PublicKey
-)
+// Agent type for declare agent (client) global variables
+type Agent struct {
+	pkey   *rsa.PublicKey
+	logger *zap.Logger
+	config interfaces.AgentActionsI
+}
 
-func Run() {
+func NewAgent() *Agent {
+	a := &Agent{
+		logger: config.GetAgentConfig().GetLogger(),
+		config: config.GetAgentConfig(),
+	}
+	if cr := a.config.GetCryptoKey(); cr != "" {
+		key, err := helpers.LoadPublicKey(cr)
+		if err != nil {
+			a.logger.Error("failed to load pulbic key", zap.String("error", err.Error()))
+		} else {
+			a.pkey = key
+		}
+	}
+
+	return a
+}
+
+func (a *Agent) Run() {
 	ctx, stop := signal.NotifyContext(
 		context.Background(),
 		syscall.SIGINT,
@@ -30,55 +49,51 @@ func Run() {
 	)
 	defer stop()
 
-	// created pem key files for asymmetric encrypting
-	met := make(chan models.MetricsCollectorData)
-	var PollCount float64
-	logger := config.GetAgentConfig().GetLogger()
+	jobs := make(chan []*models.Metrics, 100)
+	var wg sync.WaitGroup
 
-	cr := config.GetAgentConfig().GetCryptoKey()
-	if cr != "" {
-		pkey, err = helpers.LoadPublicKey(cr)
-		if err != nil {
-			logger.Error("Error to load a public key from environment's variable ", zap.String("error", err.Error()))
-			return
-		}
+	workerCount := a.config.RateLimit()
+	wg.Add(workerCount)
+
+	for i := 0; i < workerCount; i++ {
+		go func(id int) {
+			defer wg.Done()
+			for task := range jobs {
+				if err := Worker(task, a.pkey); err != nil {
+					a.logger.Error("worker error", zap.Int("id", id), zap.Error(err))
+				}
+			}
+		}(i)
 	}
 
-	go metrics.CollectMetrics(PollCount, met)
-	prettyJSON, _ := json.MarshalIndent(config.GetAgentConfig().Address(), "", "  ")
-	logger.Info("started",
-		zap.String("agent flags", string(prettyJSON)),
-		zap.String("timestamp", time.Now().Format(time.RFC3339)),
-	)
-	t := time.NewTicker(time.Duration(config.GetAgentConfig().ReportInterval()) * time.Second)
-	var wg sync.WaitGroup
+	// created pem key files for asymmetric encrypting
+	met := make(chan models.MetricsCollectorData)
+
+	go metrics.CollectMetrics(0, met)
+
+	t := time.NewTicker(time.Duration(a.config.ReportInterval()) * time.Second)
+	defer t.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
 			fmt.Println("waiting...")
+			close(jobs)
 			wg.Wait()
 			return
 		case <-t.C:
-			logger.Info("tick")
+			a.logger.Info("tick")
 			var metricData = <-met
 			metricList := make([]*models.Metrics, 0, metricData.Length)
 			for k, b := range *metricData.Metrics {
-				counter := RequestToServer("counter", k, 0, 1)
-				gauge := RequestToServer("gauge", k, b, 0)
-				metricList = append(metricList, counter, gauge)
+				metricList = append(
+					metricList,
+					RequestToServer("counter", k, 0, 1),
+					RequestToServer("gauge", k, b, 0),
+				)
 			}
 
-			rl := config.GetAgentConfig().RateLimit()
-			wg.Add(rl)
-			for i := 0; i < rl; i++ {
-				go func() {
-					defer wg.Done()
-					err := Worker(metricList, pkey)
-					if err != nil {
-						logger.Error("error while sending request to server", zap.String("error", err.Error()))
-					}
-				}()
-			}
+			jobs <- metricList
 		}
 	}
 }

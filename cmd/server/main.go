@@ -69,9 +69,15 @@ func main() {
 	run(logger)
 }
 func run(logger *zap.Logger) {
+	r, err := handlers.Webhook()
+	if err != nil {
+		logger.Info("error to get routers", zap.String("error", err.Error()))
+		return
+	}
+
 	srv := &http.Server{
 		Addr:    storage.ServerFlags.Addr,
-		Handler: handlers.Webhook(),
+		Handler: r,
 	}
 	srv.SetKeepAlivesEnabled(false)
 
@@ -83,7 +89,7 @@ func run(logger *zap.Logger) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		if err := srv.Shutdown(ctx); err != nil {
-			logger.Error("error while shutdown", zap.String("error", err.Error()))
+			logger.Info("not shutdown", zap.String("error", err.Error()))
 		} else {
 			logger.Info("shutdown complete")
 		}

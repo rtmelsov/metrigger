@@ -1,3 +1,4 @@
+// Package helpers
 package helpers
 
 import (
@@ -13,7 +14,7 @@ import (
 	"os"
 )
 
-var (
+const (
 	rsaKeySize     = 256
 	nonceSize      = 12
 	staticFullSize = rsaKeySize + nonceSize
