@@ -1,9 +1,10 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
-	"github.com/rtmelsov/metrigger/cmd/staticlint"
 	"github.com/rtmelsov/metrigger/internal/config"
 	"github.com/rtmelsov/metrigger/internal/db"
 	"github.com/rtmelsov/metrigger/internal/handlers"
@@ -12,6 +13,9 @@ import (
 	"log"
 	"net/http"
 	"net/http/pprof"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -26,7 +30,7 @@ func main() {
 	fmt.Printf("Build date: %s\r\n", buildDate)
 	fmt.Printf("Build commit: %s\r\n", buildCommit)
 
-	staticlint.Check()
+	// staticlint.Check()
 	config.ServerParseFlag()
 
 	logger := storage.GetMemStorage().GetLogger()
@@ -44,12 +48,7 @@ func main() {
 	prettyJSON, _ := json.MarshalIndent(storage.ServerFlags, "", "  ")
 	logger.Info("started", zap.String("services flags", string(prettyJSON)))
 
-	defer func(logger *zap.Logger) {
-		err := logger.Sync()
-		if err != nil {
-			logger.Error(err.Error())
-		}
-	}(logger)
+	defer logger.Sync()
 
 	go func(logger *zap.Logger) {
 		pprofMux := http.NewServeMux()
@@ -67,12 +66,39 @@ func main() {
 		}
 	}(logger)
 
-	err := run()
+	run(logger)
+}
+func run(logger *zap.Logger) {
+	r, err := handlers.Webhook()
 	if err != nil {
-		logger.Panic("error while running services", zap.String("error", err.Error()))
+		logger.Info("error to get routers", zap.String("error", err.Error()))
+		return
 	}
 
-}
-func run() error {
-	return http.ListenAndServe(storage.ServerFlags.Addr, handlers.Webhook())
+	srv := &http.Server{
+		Addr:    storage.ServerFlags.Addr,
+		Handler: r,
+	}
+	srv.SetKeepAlivesEnabled(false)
+
+	idleConnsClosed := make(chan struct{})
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	go func() {
+		<-quit
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+		if err := srv.Shutdown(ctx); err != nil {
+			logger.Info("not shutdown", zap.String("error", err.Error()))
+		} else {
+			logger.Info("shutdown complete")
+		}
+		close(idleConnsClosed)
+	}()
+
+	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+		logger.Error("error while running services", zap.String("error", err.Error()))
+	}
+	<-idleConnsClosed
+	logger.Info("server exiting")
 }

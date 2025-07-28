@@ -26,17 +26,22 @@ func GetMetricData(r *http.Request) (string, string) {
 }
 
 // Webhook функция для распределения адресов для определения методов
-func Webhook() chi.Router {
+func Webhook() (chi.Router, error) {
+	logger := storage.GetMemStorage().GetLogger()
+
 	r := chi.NewRouter()
-	//r.Use(middleware.Logger)
+	r.Use(middleware.Logger)
+
+	r.Use(middleware.GzipParser)
+	r.Use(middleware.JwtParser)
 
 	privateKey, err := helpers.LoadPrivateKey(storage.ServerFlags.CryptoRate)
 	if err != nil {
-		panic(privateKey)
+		logger.Info("can't get private by crypto key var")
+	} else {
+		r.Use(middleware.CryptoParser(privateKey))
 	}
-	r.Use(middleware.GzipParser)
-	r.Use(middleware.JwtParser)
-	r.Use(middleware.CryptoParser(privateKey))
+
 	r.Route("/", func(r chi.Router) {
 		r.Get("/", MetricsListHandler)
 		r.Get("/ping", PingDBHandler)
@@ -45,5 +50,5 @@ func Webhook() chi.Router {
 		r.Route("/value", MetricsValueHandler)
 	})
 
-	return r
+	return r, nil
 }
