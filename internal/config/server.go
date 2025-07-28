@@ -14,6 +14,7 @@ func ServerParseFlag() {
 		flag.StringVar(&storage.ServerFlags.Addr, "a", "localhost:8080", "host and port to run services")
 		flag.IntVar(&storage.ServerFlags.StoreInterval, "i", 300, "")
 		flag.StringVar(&storage.ServerFlags.FileStoragePath, "f", "file.txt", "")
+		flag.StringVar(&storage.ServerFlags.CryptoRate, "crypto-key", "private.pem", "")
 		flag.BoolVar(&storage.ServerFlags.Restore, "r", true, "")
 		flag.StringVar(&storage.ServerFlags.DataBaseDsn, "d", "", "")
 		flag.StringVar(&storage.ServerFlags.JwtKey, "k", "", "jwt key")
