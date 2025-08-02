@@ -25,6 +25,7 @@ type ServerFlagsType struct {
 	Restore         bool   `env:"RESTORE"`
 	DataBaseDsn     string `env:"DATABASE_DSN"`
 	JwtKey          string `env:"KEY"`
+	TrustedSubnet   string `env:"TRUSTED_SUBNET"`
 }
 
 // CounterMetric тип для получения/записи значения counter в списке
@@ -52,4 +53,14 @@ type MetricsCollector map[string]float64
 type MetricsCollectorData struct {
 	Metrics *MetricsCollector
 	Length  int
+}
+
+type ServerFileConfig struct {
+	Address       string `json:"address"`
+	Restore       bool   `json:"restore"`
+	StoreInterval string `json:"store_interval"`
+	StoreFile     string `json:"store_file"`
+	DataBaseDsn   string `env:"database_dsn"`
+	CryptoKey     string `json:"crypto_key"`
+	TrustedSubnet string `json:"trusted_subnet"`
 }

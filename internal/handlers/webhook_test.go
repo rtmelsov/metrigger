@@ -74,6 +74,9 @@ func jsonReqCheck(t *testing.T, ts *httptest.Server, test *models.JSONTest, b *m
 
 	// Use require.JSONEq to compare JSON strings
 	if resp.StatusCode == http.StatusOK {
+		fmt.Println("expected body", test.ExpectBody)
+		fmt.Println("response body", responseBody)
+
 		require.JSONEq(t, test.ExpectBody, responseBody, "Response body does not match expected JSON")
 	}
 }
