@@ -34,6 +34,7 @@ func Webhook() (chi.Router, error) {
 
 	r.Use(middleware.GzipParser)
 	r.Use(middleware.JwtParser)
+	r.Use(middleware.TrustedSubnet)
 
 	privateKey, err := helpers.LoadPrivateKey(storage.ServerFlags.CryptoRate)
 	if err != nil {

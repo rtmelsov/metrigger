@@ -56,6 +56,7 @@ func Worker(metricList []*models.Metrics, pkey *rsa.PublicKey) error {
 	req.Header.Set("Content-Encoding", "gzip")
 	req.Header.Set("Accept-Encoding", "gzip")
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Real-IP", config.GetAgentConfig().TrustedSubnet())
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

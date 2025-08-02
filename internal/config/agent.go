@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"flag"
 	"github.com/caarlos0/env/v6"
+	"github.com/rtmelsov/metrigger/internal/helpers"
 	"github.com/rtmelsov/metrigger/internal/interfaces"
 	"github.com/rtmelsov/metrigger/internal/models"
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
 	"log"
 	"os"
-	"strconv"
 	"sync"
 )
 
@@ -38,6 +38,7 @@ func GetAgentConfig() interfaces.AgentActionsI {
 		flag.Parse()
 
 		if flags.ConfigFile != "" || flags.ConfigCFile != "" {
+			var confs models.ClientFileConfig
 			var conf string
 			if flags.ConfigFile != "" {
 				conf = flags.ConfigFile
@@ -48,41 +49,12 @@ func GetAgentConfig() interfaces.AgentActionsI {
 			if err != nil {
 				log.Fatal(err)
 			}
-			var confs struct {
-				Address        string `json:"address"`
-				ReportInterval string `json:"report_interval"`
-				PollInterval   string `json:"poll_interval"`
-				CryptoKey      string `json:"crypto_key"`
-			}
+
 			if err := json.Unmarshal(data, &confs); err != nil {
 				log.Fatal(err)
 			}
 
-			if err != nil {
-				log.Fatal(err)
-			}
-			if flags.Addr == "" {
-				flags.Addr = confs.Address
-			}
-			if flags.ReportInterval == 0 {
-				n, err := strconv.Atoi(string(confs.ReportInterval[0]))
-				if err != nil {
-					log.Fatal(err)
-				}
-				flags.ReportInterval = n
-			}
-			if flags.PollInterval == 0 {
-				n, err := strconv.Atoi(string(confs.PollInterval[0]))
-				if err != nil {
-					log.Fatal(err)
-				}
-				flags.PollInterval = n
-			}
-			if flags.CryptoRate == "" {
-				flags.CryptoRate = confs.CryptoKey
-			}
-
-			if err != nil {
+			if err = helpers.ClientFileConfigParser(&flags, &confs); err != nil {
 				log.Fatal(err)
 			}
 		}

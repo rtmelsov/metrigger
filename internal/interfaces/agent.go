@@ -11,4 +11,5 @@ type AgentActionsI interface {
 	JwtKey() string
 	GetCryptoKey() string
 	RateLimit() int
+	TrustedSubnet() string
 }
