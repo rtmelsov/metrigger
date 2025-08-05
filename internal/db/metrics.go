@@ -20,11 +20,12 @@ func GetMetric(key string, name string) (string, error) {
 	return value, nil
 }
 
-func SetMetric(key string, name string, value string) error {
-	if key == "counter" {
-		_, err = db.Exec(constants.CounterCommand, name, key, value)
-	} else {
-		_, err = db.Exec(constants.GaugeCommand, name, key, value)
-	}
+func SetCounterMetric(name string, value int64) error {
+	_, err = db.Exec(constants.CounterCommand, name, "gauge", value)
+	return err
+}
+
+func SetGaugeMetric(name string, value float64) error {
+	_, err = db.Exec(constants.GaugeCommand, name, "coutner", value)
 	return err
 }

@@ -4,40 +4,10 @@ import (
 	"database/sql"
 	"github.com/rtmelsov/metrigger/internal/constants"
 	"github.com/rtmelsov/metrigger/internal/db"
-	"github.com/rtmelsov/metrigger/internal/models"
 	"github.com/rtmelsov/metrigger/internal/storage"
+	pb "github.com/rtmelsov/metrigger/proto"
 	"go.uber.org/zap"
-	"net/http"
 )
-
-// PingDBHandler обрабатывает HTTP-запрос для проверки соединения с базой данных.
-//
-// При успешной проверке возвращает статус 200 OK и сообщение "ok".
-// В случае ошибки — пишет ошибку в ответ и логирует её.
-func PingDBHandler(w http.ResponseWriter, r *http.Request) {
-	mem := storage.GetMemStorage()
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-
-	database, err := db.GetDataBase()
-	if err != nil {
-		mem.GetLogger().Panic("Error to ping to db", zap.String("error", err.Error()))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = database.Ping()
-	if err != nil {
-		mem.GetLogger().Panic("Error to ping to db", zap.String("error", err.Error()))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	if _, err = w.Write([]byte("ok")); err != nil {
-		mem.GetLogger().Panic("Error while sending response", zap.String("error", err.Error()))
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-	}
-}
 
 // UpdateMetrics обновляет метрики в базе данных.
 //
@@ -48,7 +18,7 @@ func PingDBHandler(w http.ResponseWriter, r *http.Request) {
 // - ошибка подключения к базе данных
 // - ошибка выполнения SQL-запросов
 // - ошибка при парсинге данных
-func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
+func UpdateMetrics(response []*pb.Metric) ([]*pb.Metric, error) {
 	log := storage.GetMemStorage().GetLogger()
 
 	tx, err := db.BeginTransaction()
@@ -67,8 +37,8 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 	defer db.CloseStmt(getGaugeCommand)
 	defer db.CloseStmt(getDeltaCommand)
 
-	var newMetrics []models.Metrics
-	for _, v := range *response {
+	var newMetrics []*pb.Metric
+	for _, v := range response {
 		log.Info("processing metric", zap.String("type", v.MType), zap.String("id", v.ID))
 		if err := db.InsertMetric(v, setGauge, setCounter); err != nil {
 			log.Panic("insert metric error", zap.Error(err))
@@ -87,7 +57,7 @@ func UpdateMetrics(response *[]models.Metrics) (*[]models.Metrics, error) {
 		log.Panic("commit error", zap.Error(err))
 		return nil, err
 	}
-	return &newMetrics, nil
+	return newMetrics, nil
 }
 
 func getCommands(tx *sql.Tx) (*sql.Stmt, *sql.Stmt, *sql.Stmt, *sql.Stmt, error) {

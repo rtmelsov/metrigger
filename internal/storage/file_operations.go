@@ -1,4 +1,4 @@
-// package storage
+// Package storage
 package storage
 
 import (
@@ -14,7 +14,7 @@ func SetDataToFile(m *MemStorage) error {
 		return errors.New("file storage path is not exist")
 	}
 
-	data := map[string]interface{}{
+	data := map[string]any{
 		"GaugeMetric":   m.Gauge,
 		"CounterMetric": m.Counter,
 	}
@@ -75,7 +75,8 @@ func getDataFromFile() (*models.LocalStorage, error) {
 		return nil, err
 	}
 
-	var result map[string]map[string]interface{}
+	var result map[string]map[string]any
+
 	err = json.Unmarshal(data, &result)
 	if err != nil {
 		return nil, err

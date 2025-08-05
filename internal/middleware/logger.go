@@ -1,23 +1,30 @@
 package middleware
 
 import (
+	"context"
 	"github.com/rtmelsov/metrigger/internal/storage"
 	"go.uber.org/zap"
-	"net/http"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 	"time"
 )
 
-func Logger(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
-		uri := r.RequestURI
-		method := r.Method
-		h.ServeHTTP(w, r)
-		duration := time.Since(start)
-		logger := storage.GetMemStorage().GetLogger()
-		logger.Info("URL data:",
-			zap.String("url", uri),
-			zap.String("method", method),
-			zap.Float64("duration", duration.Seconds()))
-	})
+func Logger(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+	start := time.Now()
+
+	storage.GetMemStorage().GetLogger().Info("Incoming request...")
+
+	resp, err := handler(ctx, req)
+
+	storage.GetMemStorage().GetLogger().Info(
+		"Finished!",
+		zap.String("full_method", info.FullMethod),
+		zap.Duration("duration", time.Since(start)),
+	)
+	if err != nil {
+		st, _ := status.FromError(err)
+		storage.GetMemStorage().GetLogger().Error(st.Message())
+	}
+
+	return resp, nil
 }

@@ -2,20 +2,30 @@
 package middleware
 
 import (
+	"context"
 	"github.com/rtmelsov/metrigger/internal/storage"
-	"net/http"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 )
 
-func TrustedSubnet(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		storage.GetMemStorage().GetLogger().Info("trusted subnet check")
-		if r.Header.Get("X-Real-IP") != "" &&
-			storage.ServerFlags.TrustedSubnet != "" {
-			if r.Header.Get("X-Real-IP") != storage.ServerFlags.TrustedSubnet {
-				http.Error(w, "x real ip is not correct", http.StatusForbidden)
-				return
+func TrustedSubnet(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+	storage.GetMemStorage().GetLogger().Info("trusted subnet check")
+
+	md, ok := metadata.FromIncomingContext(ctx)
+
+	if ok {
+		values := md.Get("X-Real-IP")
+		if len(values) > 0 {
+			trustedSubnet := values[0]
+			if trustedSubnet != storage.ServerFlags.TrustedSubnet {
+				return nil, status.Errorf(codes.Aborted, "exptected subnet %v, but we got %v", storage.ServerFlags.TrustedSubnet, trustedSubnet)
 			}
 		}
-		h.ServeHTTP(w, r)
-	})
+	}
+
+	storage.GetMemStorage().GetLogger().Info("we don't have any trusted subnet")
+
+	return handler(ctx, req)
 }

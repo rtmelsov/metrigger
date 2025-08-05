@@ -1,14 +1,17 @@
 package agent
 
 import (
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"context"
 	"crypto/rsa"
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/config"
-	"github.com/rtmelsov/metrigger/internal/helpers"
 	"github.com/rtmelsov/metrigger/internal/interfaces"
 	"github.com/rtmelsov/metrigger/internal/metrics"
 	"github.com/rtmelsov/metrigger/internal/models"
+	pb "github.com/rtmelsov/metrigger/proto"
 	"go.uber.org/zap"
 	"os/signal"
 	"sync"
@@ -24,20 +27,10 @@ type Agent struct {
 }
 
 func NewAgent() *Agent {
-	a := &Agent{
+	return &Agent{
 		logger: config.GetAgentConfig().GetLogger(),
 		config: config.GetAgentConfig(),
 	}
-	if cr := a.config.GetCryptoKey(); cr != "" {
-		key, err := helpers.LoadPublicKey(cr)
-		if err != nil {
-			a.logger.Error("failed to load pulbic key", zap.String("error", err.Error()))
-		} else {
-			a.pkey = key
-		}
-	}
-
-	return a
 }
 
 func (a *Agent) Run() {
@@ -49,7 +42,15 @@ func (a *Agent) Run() {
 	)
 	defer stop()
 
-	jobs := make(chan []*models.Metrics, 100)
+	conn, err := grpc.NewClient(":3200", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		a.logger.Error("worker error", zap.Error(err))
+	}
+	defer conn.Close()
+
+	c := pb.NewMetricsServiceClient(conn)
+
+	jobs := make(chan []*pb.Metric, 100)
 	var wg sync.WaitGroup
 
 	workerCount := a.config.RateLimit()
@@ -59,7 +60,7 @@ func (a *Agent) Run() {
 		go func(id int) {
 			defer wg.Done()
 			for task := range jobs {
-				if err := Worker(task, a.pkey); err != nil {
+				if err := Worker(task, c); err != nil {
 					a.logger.Error("worker error", zap.Int("id", id), zap.Error(err))
 				}
 			}
@@ -84,7 +85,7 @@ func (a *Agent) Run() {
 		case <-t.C:
 			a.logger.Info("tick")
 			var metricData = <-met
-			metricList := make([]*models.Metrics, 0, metricData.Length)
+			metricList := make([]*pb.Metric, 0, metricData.Length)
 			for k, b := range *metricData.Metrics {
 				metricList = append(
 					metricList,

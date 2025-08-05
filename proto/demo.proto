@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package demo;
+option go_package = "github.com/rtmelsov/metrigger/proto;demo";
+
+import "google/protobuf/empty.proto";
+
+// One datapoint:
+message Metric {
+  string  ID      = 1;
+  string  MType   = 2;
+  int64   Delta   = 3;
+  double  Value   = 4;
+}
+
+// AddMetrics method 
+message AddMetricsRequest {
+  repeated Metric metrics = 1;
+}
+
+message AddMetricsResponse {
+  repeated Metric metrics = 1;
+}
+
+// GetMetrics method 
+message GetMetricsResponse {
+  repeated Metric metrics = 1;
+}
+
+// AddMetric method
+message AddMetricRequest {
+  Metric metric = 1;
+}
+
+message AddMetricResponse {
+  Metric metric = 1;
+}
+
+// GetMetric method
+message GetMetricRequest {
+  Metric metric = 1;
+}
+
+message GetMetricResponse {
+  Metric metric = 1;
+}
+
+// We don’t really need any payload in the response—Empty is idiomatic:
+service MetricsService {
+  rpc AddMetrics(AddMetricsRequest) returns (AddMetricsResponse);
+  rpc GetMetrics(google.protobuf.Empty) returns (GetMetricsResponse);
+  rpc AddMetric(AddMetricRequest) returns (AddMetricResponse);
+  rpc GetMetric(GetMetricRequest) returns (GetMetricResponse);
+}
+
