@@ -62,13 +62,7 @@ func NewGaugeMetric() *models.GaugeMetric {
 }
 
 func (m *MemStorage) GetGaugeMetric(name string) (*models.GaugeMetric, error) {
-	var value models.GaugeMetric
 	value, ok := m.Gauge[name]
-	logger := GetMemStorage().GetLogger()
-	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	logger.Info("get data:",
-		zap.String("GetGaugeMetric name", name),
-		zap.String("GetGaugeMetric value", string(prettyJSON)))
 	if !ok {
 		return nil, errors.New("can't get that name's value")
 	}
@@ -76,12 +70,6 @@ func (m *MemStorage) GetGaugeMetric(name string) (*models.GaugeMetric, error) {
 }
 
 func (m *MemStorage) GetCounterMetric(name string) (*models.CounterMetric, error) {
-	var value models.CounterMetric
-	logger := GetMemStorage().GetLogger()
-	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	logger.Info("get data:",
-		zap.String("GetCounterMetric name", name),
-		zap.String("GetCounterMetric value", string(prettyJSON)))
 	value, ok := m.Counter[name]
 	if !ok {
 		return nil, errors.New("can't get that name's value")
@@ -90,12 +78,6 @@ func (m *MemStorage) GetCounterMetric(name string) (*models.CounterMetric, error
 }
 
 func (m *MemStorage) SetCounterMetric(name string, value models.CounterMetric) {
-	logger := GetMemStorage().GetLogger()
-	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	logger.Info("set data first:",
-		zap.String("SetCounterMetric name", name),
-		zap.String("SetCounterMetric value", string(prettyJSON)))
-
 	m.Counter[name] = value
 	if err := m.WriteAllData(ServerFlags.StoreInterval); err != nil {
 		m.Logger.Error(err.Error())
@@ -103,13 +85,7 @@ func (m *MemStorage) SetCounterMetric(name string, value models.CounterMetric) {
 }
 
 func (m *MemStorage) SetGaugeMetric(name string, value models.GaugeMetric) {
-	logger := GetMemStorage().GetLogger()
-	prettyJSON, _ := json.MarshalIndent(value, "", "  ")
-	logger.Info("set data second:",
-		zap.String("set gauge metric name", name),
-		zap.String("set gauge metric value", string(prettyJSON)))
 	m.Gauge[name] = value
-
 	if err := m.WriteAllData(ServerFlags.StoreInterval); err != nil {
 		m.Logger.Error(err.Error())
 	}

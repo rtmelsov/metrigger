@@ -9,6 +9,7 @@ type AgentFlags struct {
 	ConfigCFile    string
 	ReportInterval int    `env:"REPORT_INTERVAL"`
 	PollInterval   int    `env:"POLL_INTERVAL"`
+	TrustedSubnet  string `env:"TRUSTED_SUBNET"`
 	Addr           string `env:"ADDRESS"`
 	JwtKey         string `env:"KEY"`
 	RateLimit      int    `env:"RATE_LIMIT"`
@@ -46,4 +47,16 @@ func (cfg *AgentConfig) RateLimit() int {
 
 func (cfg *AgentConfig) GetLogger() *zap.Logger {
 	return cfg.Logger
+}
+
+func (cfg *AgentConfig) TrustedSubnet() string {
+	return cfg.Flags.TrustedSubnet
+}
+
+type ClientFileConfig struct {
+	Address        string `json:"address"`
+	ReportInterval string `json:"report_interval"`
+	PollInterval   string `json:"poll_interval"`
+	TrustedSubnet  string `json:"trusted_subnet"`
+	CryptoKey      string `json:"crypto_key"`
 }

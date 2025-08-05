@@ -44,10 +44,11 @@ func GetDBGauge(name string) (*models.GaugeMetric, error) {
 	}, nil
 }
 
-func SetDBGauge(name string, val string) error {
-	return db.SetMetric("gauge", name, val)
+func SetDBGauge(name string, val float64) error {
+
+	return db.SetGaugeMetric(name, val)
 }
 
-func SetDBGounter(name string, val string) error {
-	return db.SetMetric("counter", name, val)
+func SetDBGounter(name string, val int64) error {
+	return db.SetCounterMetric(name, val)
 }

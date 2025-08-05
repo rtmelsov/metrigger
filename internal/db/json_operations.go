@@ -1,10 +1,10 @@
+// Package db
 package db
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"github.com/rtmelsov/metrigger/internal/models"
+	pb "github.com/rtmelsov/metrigger/proto"
 	"strconv"
 )
 
@@ -30,18 +30,12 @@ func RollbackTx(tx *sql.Tx) error {
 	return nil
 }
 
-func InsertMetric(v models.Metrics, setGauge, setCounter *sql.Stmt) error {
+func InsertMetric(v *pb.Metric, setGauge, setCounter *sql.Stmt) error {
 	switch v.MType {
 	case "gauge":
-		if v.Value == nil {
-			return errors.New("value is empty")
-		}
 		_, err := setGauge.Exec(v.ID, v.MType, v.Value)
 		return err
 	case "counter":
-		if v.Delta == nil {
-			return errors.New("delta is empty")
-		}
 		_, err := setCounter.Exec(v.ID, v.MType, v.Delta)
 		return err
 	default:
@@ -49,28 +43,28 @@ func InsertMetric(v models.Metrics, setGauge, setCounter *sql.Stmt) error {
 	}
 }
 
-func FetchUpdatedMetric(v models.Metrics, getGaugeCommand, getDeltaCommand *sql.Stmt) (models.Metrics, error) {
+func FetchUpdatedMetric(v *pb.Metric, getGaugeCommand, getDeltaCommand *sql.Stmt) (*pb.Metric, error) {
 	if v.MType == "gauge" {
 		var value string
 		err := getGaugeCommand.QueryRow(v.MType, v.ID).Scan(&value)
 		if err != nil {
-			return models.Metrics{}, err
+			return nil, err
 		}
 		f, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return models.Metrics{}, err
+			return nil, err
 		}
-		return models.Metrics{ID: v.ID, MType: v.MType, Value: &f}, nil
+		return &pb.Metric{ID: v.ID, MType: v.MType, Value: f}, nil
 	}
 
 	var delta string
 	err := getDeltaCommand.QueryRow(v.MType, v.ID).Scan(&delta)
 	if err != nil {
-		return models.Metrics{}, err
+		return nil, err
 	}
 	d, err := strconv.ParseInt(delta, 10, 64)
 	if err != nil {
-		return models.Metrics{}, err
+		return nil, err
 	}
-	return models.Metrics{ID: v.ID, MType: v.MType, Delta: &d}, nil
+	return &pb.Metric{ID: v.ID, MType: v.MType, Delta: d}, nil
 }

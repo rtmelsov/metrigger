@@ -1,83 +1,33 @@
 package agent
 
 import (
-	"crypto/rsa"
-	"encoding/json"
+	"context"
 	"fmt"
 	"github.com/rtmelsov/metrigger/internal/config"
-	"github.com/rtmelsov/metrigger/internal/helpers"
-	"github.com/rtmelsov/metrigger/internal/models"
-	"go.uber.org/zap"
-	"net/http"
+	pb "github.com/rtmelsov/metrigger/proto"
+	"google.golang.org/grpc/metadata"
 )
 
 // Worker функция для отправки POST запроса
-func Worker(metricList []*models.Metrics, pkey *rsa.PublicKey) error {
-
+func Worker(metricList []*pb.Metric, c pb.MetricsServiceClient) error {
 	// get logger method
 	logger := config.GetAgentConfig().GetLogger()
+	t := config.GetAgentConfig().TrustedSubnet()
 
-	data, err := json.Marshal(&metricList)
+	md := metadata.New(map[string]string{"X-Real-IP": t})
+	ctx := metadata.NewOutgoingContext(context.Background(), md)
+	// Wrap a list of them:
+	data, err := c.AddMetrics(ctx, &pb.AddMetricsRequest{
+		Metrics: metricList,
+	})
+	logger.Info("get info")
 	if err != nil {
-		logger.Error("Error to Marshal JSON", zap.String("error", err.Error()))
+		logger.Info("ERROR")
 		return err
 	}
 
-	// - returned crypto key for agent (public key)
-	if config.GetAgentConfig().GetCryptoKey() != "" {
-		data, err = helpers.EncryptForServer(pkey, data)
-		if err != nil {
-			logger.Error("Error to encrypt message for server with public key", zap.String("error", err.Error()))
-			return err
-		}
-	}
+	fmt.Printf("INFO: %v\r\n", data.Metrics)
 
-	reqBody, err := helpers.CompressData(data)
-	if err != nil {
-		logger.Error("Error to Marshal JSON", zap.String("error", err.Error()))
-		return err
-	}
-
-	url := fmt.Sprintf("http://%s/updates/", config.GetAgentConfig().Address())
-
-	req, err := http.NewRequest("POST", url, reqBody)
-
-	if err != nil {
-		logger.Error("1 Request to services", zap.String("error", err.Error()))
-		return err
-	}
-
-	if config.GetAgentConfig().JwtKey() != "" {
-		hash := helpers.ComputeHMACSHA256(data, config.GetAgentConfig().JwtKey())
-		req.Header.Set("HashSHA256", hash)
-	}
-
-	req.Header.Set("X-Encrypted", "true") // Явно указываешь
-	req.Header.Set("Content-Encoding", "gzip")
-	req.Header.Set("Accept-Encoding", "gzip")
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-
-	if err != nil {
-		logger.Error("2 Request to services", zap.String("error", err.Error()))
-		return err
-	}
-
-	if resp.StatusCode != 200 {
-		logger.Error("status code: ", zap.Int("code", resp.StatusCode))
-	}
-
-	if config.GetAgentConfig().JwtKey() != "" {
-		logger.Info("hash answer", zap.String("HashSHA256", resp.Header.Get("HashSHA256")))
-	}
-
-	err = resp.Body.Close()
-	if err != nil {
-		logger.Error("3 Request to services", zap.String("error", err.Error()))
-		return err
-	}
 	logger.Info("requested")
 	return nil
 }
